@@ -20,7 +20,7 @@ from services.supabase import save_media
 logger = logging.getLogger(__name__)
 router = Router()
 
-HELP_TEXT = """🎬 **How to use SKDL Bot:**
+HELP_TEXT = """🎬 **SKDL — Netflix and Chill with SKDL** 🍿
 
 Just tell me what you want to watch in plain English!
 

@@ -7,7 +7,7 @@ export default function NotFound() {
         <div className="text-4xl mb-4">🔗</div>
         <h1 className="text-xl font-semibold text-white mb-2">Link not found.</h1>
         <p className="text-gray-400 mb-6">
-          This link doesn&apos;t exist or has been removed.
+          SKDL — Netflix and Chill with SKDL. But this link doesn&apos;t exist.
         </p>
         <a
           href="https://t.me/SK_DLBOT"
