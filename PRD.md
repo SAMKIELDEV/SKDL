@@ -16,13 +16,11 @@ Accessing movies and TV series programmatically is painful. Existing tools are C
 
 ## Goals (MVP)
 
-- User can request a movie or series episode in plain English
-- Bot understands the request via Groq AI (no need for slash commands)
-- Bot fetches content via moviebox-api and delivers:
-  - The file directly in Telegram chat (if under 2GB)
-  - A short redirect link at `samkiel.online/[id]`
-- Links expire after 6 hours; expired page tells user to re-request
-- Bot maintains short conversation history per user for clarification flows
+- **Conversational Search**: Request movies/series in plain English via Groq AI.
+- **IP-Lock Bypass**: Dynamic CDN URL refreshing on each web visit via `subject_id`.
+- **High-Stealth Delivery**: Custom video proxy at `samkiel.online/api/proxy` to bypass CDN blocks (Referer spoofing).
+- **Direct TG Delivery**: Local download and stream logic to bypass bot server blocks.
+- **Expireable Links**: Short links at `samkiel.online/[id]` that expire after 6 hours.
 
 ---
 
@@ -57,7 +55,7 @@ Accessing movies and TV series programmatically is painful. Existing tools are C
 - Slash commands still supported as fallback:
   - `/start` — welcome + instructions
   - `/movie <title>` — direct movie request
-  - `/series <title> <season> <episode>` — direct series request
+  - `/series <title> <season> <episode>` — direct episode download
   - `/status` — health check
 
 #### Intent Types
@@ -75,15 +73,15 @@ Accessing movies and TV series programmatically is painful. Existing tools are C
 - Session cleared after successful download or `/start`
 
 #### Delivery
-- Bot attempts to send file directly in chat
-- If file exceeds 2GB or upload fails, skips file and sends link only
-- Always sends `samkiel.online/[id]` link regardless
+- **Local Download & Stream**: Bot downloads media locally with stealth headers, then uploads to Telegram to ensure the CDN request originates from a valid server context.
+- **Fallback**: If file exceeds 2GB, skips file and sends link only.
+- **Link Generation**: Always generates a `samkiel.online/[id]` link using a lowercase-only alphabet.
 - Message format:
   ```
   🎬 Avatar (2009)
   Quality: 1080p
 
-  📥 Download link: samkiel.online/x7k2pQr1
+  📥 Link: samkiel.online/x7k2pqre
   ⏳ Link expires in 6 hours
 
   [file attached if under 2GB]
@@ -99,7 +97,7 @@ Accessing movies and TV series programmatically is painful. Existing tools are C
 | Bot framework | aiogram 3.x |
 | AI / NLU | Groq API (llama-3.3-70b-versatile) |
 | Content source | moviebox-api (interception method) |
-| Link server | Next.js 16 (App Router) |
+| Link server | Next.js 16 (React 19, Turbopack) |
 | Database | Supabase (Postgres) |
 | Domain | samkiel.online |
 | ID generation | nanoid (Python) |
@@ -116,7 +114,7 @@ SUPABASE_KEY=
 GROQ_API_KEY=
 LINK_BASE_URL=https://samkiel.online
 CDN_TTL_HOURS=6
-MOVIEBOX_API_HOST_V2=h5-api.aoneroom.com
+MOVIEBOX_API_HOST_V2=h5.aoneroom.com
 ```
 
 ### Web
@@ -125,3 +123,20 @@ SUPABASE_URL=
 SUPABASE_KEY=
 NEXT_PUBLIC_BOT_USERNAME=SK_DLBOT
 ```
+
+---
+
+## Architecture Detail
+
+### Web Proxy
+The proxy at `/api/proxy` is necessary because the CDN requires specific Referer and Origin headers that browsers cannot easily spoof on their own for direct video requests.
+- **Spoofed Referer**: `https://fmoviesunblocked.net/`
+- **Spoofed Origin**: `https://h5.aoneroom.com`
+- **Byte Range Support**: Pass-through support for `Accept-Ranges` to enable video scrubbing.
+
+### IP-Lock Solution (On-Demand Refresh)
+1. User clicks `samkiel.online/abcd`.
+2. Web App fetches `subject_id` for that link from Supabase.
+3. Web App calls MovieBox API using its server IP to get a **fresh** CDN link.
+4. Web App redirects the user to `/api/proxy?url=...`.
+5. This ensures the CDN link is never stale or locked to the Bot's IP.

@@ -63,9 +63,9 @@ bot/
     series.py          # /series <title> <season> <episode> command
     message.py         # catches all non-command text → routes through Groq
   services/
-    moviebox.py        # interfaces with moviebox-api, returns CDN URL + metadata
-    supabase.py        # all DB reads and writes
-    link.py            # nanoid generation, link building
+    moviebox.py        # interfaces with moviebox-api, returns subject_id + metadata
+    supabase.py        # all DB reads and writes (id, subject_id, etc.)
+    link.py            # nanoid generation (lowercase alphabet), link building
     groq_service.py    # Groq API call, returns parsed intent dict
     session.py         # in-memory dict keyed by telegram user_id
 ```
@@ -108,92 +108,52 @@ MAX_HISTORY = 10
 ```
 Clear session after successful download or on `/start`.
 
-### moviebox.py — critical note:
-The `moviebox-api` library is designed to download files, not just return URLs.
-The goal is to intercept the CDN URL BEFORE the download completes.
-
-Investigate `moviebox_api.v1` internals specifically:
-- `MovieAuto` class
-- `Downloader` class
-- Look for where the stream/CDN URL is resolved before bytes are written to disk
-
-The `moviebox.py` service should expose:
-```python
-async def get_movie(title: str, quality: str = "1080p") -> dict:
-    # returns { cdn_url, title, year, quality }
-
-async def get_episode(title: str, season: int, episode: int, quality: str = "1080p") -> dict:
-    # returns { cdn_url, title, season, episode, quality }
-```
-
-If CDN URL interception is not possible cleanly, download to a temp file, upload to Telegram, then delete. Document which approach was used with a comment.
-
-### Delivery logic (in handlers):
-```python
-# Always save to DB and generate link first
-# Then attempt file upload
-# If upload fails or file > 2GB, send link only
-# Always send the link regardless
-```
-
-### Message format for bot replies:
-```
-🎬 {title} ({year})        # for movies
-📺 {title} S{season}E{episode}  # for series
-Quality: {quality}
-
-📥 movies.samkiel.dev/{id}
-⏳ Link expires in 6 hours
-```
+### Delivery logic (CRITICAL):
+CDN URLs are IP-locked. Telegram's servers are often blocked.
+1. **The Web Redirect**: `app/[id]/page.tsx` MUST fetch a fresh CDN URL using the stored `subject_id` for every unique visitor.
+2. **The Proxy**: All video URLs MUST be served through `/api/proxy?url=...` with spoofed `Referer` (`https://fmoviesunblocked.net/`) and `Origin`.
+3. **The Bot Delivery**: Bot now downloads the file to a local temp buffer/file using the stealth headers, then uploads it as a document to Telegram. This bypasses the CDN's block on Telegram's IP. Delete temp files immediately after.
 
 ---
 
 ## Web — Next.js Conventions
 
 ### Stack:
-- Next.js 14, App Router, TypeScript
+- Next.js 16 (React 19, Turbopack)
 - Supabase JS client (`@supabase/supabase-js`)
-- Tailwind CSS for styling
-- No UI component library (keep it minimal)
+- Tailwind CSS / shadcn/ui
 
 ### File structure — do not change this:
 ```
 web/
   app/
+    api/
+      proxy/
+        route.ts    # Stealth video proxy
     [id]/
-      page.tsx      # dynamic route — redirect or expired UI
+      page.tsx      # dynamic refresh + redirect logic
     not-found.tsx   # 404 page
     layout.tsx      # root layout
-    page.tsx        # root page — redirects to t.me/SK_DLBOT
+    page.tsx        # root page (redirects to TG)
   lib/
     supabase.ts     # createClient() export
-  .env.example
-  package.json
-  tailwind.config.ts
-  tsconfig.json
+    moviebox.ts     # fresh CDN URL fetcher (server-side)
 ```
 
-### The `[id]` route — exact logic:
-```typescript
-// app/[id]/page.tsx
-// This is a server component
-// 1. Get id from params
-// 2. Query Supabase media table by id
-// 3. If no row: notFound()
-// 4. If expires_at < now: render <ExpiredPage title={data.title} />
-// 5. If valid: redirect(data.cdn_url) — use Next.js redirect()
-```
+### The `/api/proxy` logic:
+Must spoof these exact headers on every fetch to the CDN:
+- `User-Agent`: Modern Chrome/Firefox
+- `Referer`: `https://fmoviesunblocked.net/`
+- `Origin`: `https://h5.aoneroom.com`
+- `Accept-Encoding`: `identity`
+- `Range`: `bytes=0-` (initial) or pass-through from request
 
-### Supabase client:
-```typescript
-// lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
-
-export const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!
-)
-```
+### The `[id]` route – exact logic:
+Must include `export const dynamic = 'force-dynamic'` to bypass stale 404 caching.
+1. Get `id` from params.
+2. Query Supabase `media` table for `subject_id`.
+3. If valid, fetch **new** CDN URL using `lib/moviebox.ts`.
+4. Redirect to `/api/proxy?url={encoded_new_url}`.
 
 ### Styling rules:
 - Dark background (`#0f0f0f` or `bg-zinc-950`)
@@ -225,16 +185,17 @@ Redirect immediately to `https://t.me/SK_DLBOT`
 ### Supabase table: `media`
 ```sql
 create table media (
-  id            text primary key,
+  id            text primary key,          -- lowercase nanoid (8 chars)
   title         text not null,
-  cdn_url       text not null,
+  cdn_url       text not null,             -- fallback / original URL
   type          text not null check (type in ('movie', 'series')),
   quality       text default '1080p',
   season        integer null,
   episode       integer null,
   requested_by  bigint null,
   requested_at  timestamptz default now(),
-  expires_at    timestamptz not null
+  expires_at    timestamptz not null,
+  subject_id    text                       -- REQUIRED for IP-bound refresh
 );
 ```
 
