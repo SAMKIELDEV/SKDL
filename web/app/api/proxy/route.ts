@@ -10,15 +10,28 @@ export async function GET(request: NextRequest) {
 
   try {
     const headers = new Headers()
-    // Using the exact referer that the MovieBox web app uses
-    headers.set('Referer', 'https://h5.aoneroom.com/')
+    
+    // Core Stealth Headers
+    headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36')
+    headers.set('Referer', 'https://fmoviesunblocked.net/')
     headers.set('Origin', 'https://h5.aoneroom.com')
-    headers.set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    headers.set('Accept', '*/*')
+    headers.set('Accept-Language', 'en-US,en;q=0.9')
+    headers.set('Connection', 'keep-alive')
+    headers.set('Sec-Fetch-Dest', 'video')
+    headers.set('Sec-Fetch-Mode', 'no-cors')
+    headers.set('Sec-Fetch-Site', 'cross-site')
+    
+    // Force identity encoding to prevent CDN gzip errors on binary data
+    headers.set('Accept-Encoding', 'identity')
+
+    // Initial range request to satisfy some CDNs
+    headers.set('Range', 'bytes=0-')
 
     const response = await fetch(url, { 
       headers,
       method: 'GET',
-      // For large video files, we should avoid full buffering
+      cache: 'no-store'
     })
 
     if (!response.ok) {
