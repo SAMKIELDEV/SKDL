@@ -32,12 +32,16 @@ function ExpiredPage({ title }: { title: string }) {
   )
 }
 
+export const dynamic = 'force-dynamic'
+
 export default async function LinkPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
+  
+  console.log('--- Redirecting Link:', id)
 
   const { data, error } = await supabase
     .from('media')
@@ -45,7 +49,12 @@ export default async function LinkPage({
     .eq('id', id)
     .single()
 
-  if (error || !data) {
+  if (error) {
+    console.error('Supabase Error for id:', id, error)
+  }
+  
+  if (!data) {
+    console.log('Record not found in DB for id:', id)
     notFound()
   }
 

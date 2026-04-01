@@ -9,8 +9,8 @@ from nanoid import generate
 
 from config import settings
 
-# URL-safe alphabet, 8 chars ≈ 2.8 trillion combinations
-_ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+# Simplified lowercase alphabet for case-insensitive DBs
+_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
 _ID_LENGTH = 8
 
 
