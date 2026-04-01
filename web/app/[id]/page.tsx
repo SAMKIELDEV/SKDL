@@ -1,5 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { getFreshCdnUrl } from '@/lib/moviebox'
 
 interface MediaRow {
   id: string
@@ -10,6 +11,7 @@ interface MediaRow {
   season: number | null
   episode: number | null
   expires_at: string
+  subject_id?: string
 }
 
 function ExpiredPage({ title }: { title: string }) {
@@ -55,5 +57,22 @@ export default async function LinkPage({
     return <ExpiredPage title={row.title} />
   }
 
-  redirect(row.cdn_url)
+  let finalUrl = row.cdn_url
+
+  // If we have a subject_id, get a fresh IP-bound link for the current requester
+  if (row.subject_id) {
+    try {
+      finalUrl = await getFreshCdnUrl(
+        row.subject_id,
+        row.type,
+        row.season || 0,
+        row.episode || 0
+      )
+    } catch (e) {
+      console.error('Failed to refresh CDN URL, falling back to original:', e)
+    }
+  }
+
+  // Redirect through our robust proxy to bypass Referer/origin blocks
+  redirect(`/api/proxy?url=${encodeURIComponent(finalUrl)}`)
 }
