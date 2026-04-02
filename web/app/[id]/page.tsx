@@ -40,7 +40,13 @@ export default async function LinkPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = getSupabaseClient()
+  let supabase
+  try {
+    supabase = getSupabaseClient()
+  } catch (e) {
+    console.error('Supabase client init failed:', e)
+    notFound()
+  }
   
   console.log('--- Redirecting Link:', id)
 
