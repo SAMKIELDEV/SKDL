@@ -12,12 +12,9 @@ The library resolves CDN URLs in this order:
    -> Returns SearchResultsModel containing SearchResultsItem objects.
    -> Each item has subjectId, title, releaseDate, etc.
 
-2. Build subject/download URL from subjectId + episode coordinates.
-    -> Endpoint: /wefeed-h5-bff/web/subject/download
-    -> Params: {subjectId, se=0, ep=0} for movies, {subjectId, se=N, ep=N} for series
-    -> Route request through Next.js proxy:
-        https://samkiel.online/api/proxy?url=<encoded subject/download URL>
-    -> Parse downloads from JSON payload data.downloads
+2. DownloadableMovieFilesDetail / DownloadableTVSeriesFilesDetail
+    -> Resolves downloadable metadata from moviebox session context.
+    -> Uses season/episode coordinates for series requests.
 
 3. resolve_media_file_to_be_downloaded(quality, downloadable_metadata)
    -> Picks the MediaFileMetadata matching the requested quality.
@@ -34,9 +31,9 @@ The library resolves CDN URLs in this order:
    -> This is where bytes are actually written to disk.
    -> We stop at step 4 — we have the CDN URL without downloading.
 
-APPROACH: Search with moviebox-api, then fetch subject/download through
-the web proxy to avoid Railway IP blocking. Resolve requested quality
-from the returned downloads list without invoking any file downloader.
+APPROACH: Search with moviebox-api, then resolve downloadable metadata
+through SDK detail endpoints and return CDN URLs without invoking any
+file downloader.
 
 For series: DownloadableTVSeriesFilesDetail inherits from
 BaseDownloadableFilesDetail and uses get_content_model(season, episode)
@@ -46,9 +43,6 @@ with the season/episode params passed through.
 from __future__ import annotations
 
 import logging
-from urllib.parse import quote
-
-import httpx
 
 from moviebox_api.v1 import (
     Search,
@@ -67,10 +61,6 @@ logger = logging.getLogger(__name__)
 import os
 os.environ.setdefault("MOVIEBOX_API_HOST_V2", settings.MOVIEBOX_API_HOST_V2)
 
-PROXY_BASE_URL = f"{settings.WEB_PROXY_BASE_URL.rstrip('/')}/api/proxy"
-DOWNLOAD_ENDPOINT = f"https://{settings.MOVIEBOX_DOWNLOAD_API_HOST}/wefeed-h5-bff/web/subject/download"
-
-
 def _normalize_quality(quality: str) -> str:
     """Convert quality string to moviebox-api format (e.g. '1080p' -> '1080P')."""
     q = quality.strip().upper()
@@ -79,31 +69,6 @@ def _normalize_quality(quality: str) -> str:
     # Strip trailing P and re-add uppercase
     q = q.rstrip("P") + "P"
     return q
-
-
-def _build_download_url(subject_id: str, season: int, episode: int) -> str:
-    return f"{DOWNLOAD_ENDPOINT}?subjectId={subject_id}&se={season}&ep={episode}"
-
-
-def _build_proxy_url(download_url: str) -> str:
-    return f"{PROXY_BASE_URL}?url={quote(download_url, safe='')}"
-
-
-def _select_download(downloads: list[dict], quality: str) -> dict:
-    norm_quality = _normalize_quality(quality)
-    # Keep BEST semantics as default/fallback when an exact resolution is unavailable.
-    if norm_quality == "BEST":
-        return max(downloads, key=lambda d: int(d.get("resolution") or 0))
-
-    if norm_quality == "WORST":
-        return min(downloads, key=lambda d: int(d.get("resolution") or 0))
-
-    target_resolution = int(norm_quality.rstrip("P"))
-    for item in downloads:
-        if int(item.get("resolution") or 0) == target_resolution:
-            return item
-
-    return max(downloads, key=lambda d: int(d.get("resolution") or 0))
 
 
 def _resolve_sdk_media_file(downloadable, quality: str):
@@ -118,32 +83,6 @@ def _resolve_sdk_media_file(downloadable, quality: str):
         if downloads:
             return max(downloads, key=lambda d: int(getattr(d, "resolution", 0) or 0))
         raise
-
-
-async def _fetch_downloads_via_proxy(subject_id: str, season: int, episode: int) -> list[dict]:
-    download_url = _build_download_url(subject_id, season, episode)
-    proxy_url = _build_proxy_url(download_url)
-
-    try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.get(proxy_url)
-            response.raise_for_status()
-    except httpx.HTTPError as exc:
-        details = ""
-        if isinstance(exc, httpx.HTTPStatusError):
-            details = f" status={exc.response.status_code} body={exc.response.text[:200]}"
-        raise RuntimeError(f"Proxy fetch failed for subject {subject_id}:{details} err={exc}") from exc
-
-    try:
-        payload = response.json()
-    except ValueError as exc:
-        raise RuntimeError("Proxy response was not valid JSON for subject/download") from exc
-
-    downloads = payload.get("data", {}).get("downloads", []) if isinstance(payload, dict) else []
-    if not isinstance(downloads, list) or not downloads:
-        raise RuntimeError("No downloads found in proxied subject/download response")
-
-    return downloads
 
 
 async def get_movie(title: str, quality: str = "1080p") -> dict:
@@ -168,21 +107,12 @@ async def get_movie(title: str, quality: str = "1080p") -> dict:
 
         target = search_results.first_item
 
-        # Step 2: Prefer SDK metadata resolution (handles app-info cookies/session details).
-        resolution = 0
-        cdn_url = ""
-        try:
-            detail = DownloadableMovieFilesDetail(session, target)
-            downloadable = await detail.get_content_model()
-            media_file = _resolve_sdk_media_file(downloadable, quality)
-            cdn_url = str(media_file.url)
-            resolution = int(media_file.resolution or 0)
-        except Exception as sdk_exc:
-            logger.warning("SDK download metadata failed for movie '%s', falling back to proxy: %s", title, sdk_exc)
-            downloads = await _fetch_downloads_via_proxy(target.subjectId, season=0, episode=0)
-            selected = _select_download(downloads, quality)
-            cdn_url = str(selected.get("url") or "")
-            resolution = int(selected.get("resolution") or 0)
+        # Step 2: Resolve download metadata via SDK only.
+        detail = DownloadableMovieFilesDetail(session, target)
+        downloadable = await detail.get_content_model()
+        media_file = _resolve_sdk_media_file(downloadable, quality)
+        cdn_url = str(media_file.url)
+        resolution = int(media_file.resolution or 0)
 
         if not cdn_url:
             raise RuntimeError("Could not resolve a playable URL for selected movie")
@@ -224,27 +154,12 @@ async def get_episode(
 
         target = search_results.first_item
 
-        # Step 2: Prefer SDK metadata resolution first.
-        resolution = 0
-        cdn_url = ""
-        try:
-            detail = DownloadableTVSeriesFilesDetail(session, target)
-            downloadable = await detail.get_content_model(season=season, episode=episode)
-            media_file = _resolve_sdk_media_file(downloadable, quality)
-            cdn_url = str(media_file.url)
-            resolution = int(media_file.resolution or 0)
-        except Exception as sdk_exc:
-            logger.warning(
-                "SDK download metadata failed for '%s' S%dE%d, falling back to proxy: %s",
-                title,
-                season,
-                episode,
-                sdk_exc,
-            )
-            downloads = await _fetch_downloads_via_proxy(target.subjectId, season=season, episode=episode)
-            selected = _select_download(downloads, quality)
-            cdn_url = str(selected.get("url") or "")
-            resolution = int(selected.get("resolution") or 0)
+        # Step 2: Resolve episode download metadata via SDK only.
+        detail = DownloadableTVSeriesFilesDetail(session, target)
+        downloadable = await detail.get_content_model(season=season, episode=episode)
+        media_file = _resolve_sdk_media_file(downloadable, quality)
+        cdn_url = str(media_file.url)
+        resolution = int(media_file.resolution or 0)
 
         if not cdn_url:
             raise RuntimeError("Could not resolve a playable URL for selected episode")
