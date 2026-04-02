@@ -64,8 +64,8 @@ logger = logging.getLogger(__name__)
 import os
 os.environ.setdefault("MOVIEBOX_API_HOST_V2", settings.MOVIEBOX_API_HOST_V2)
 
-PROXY_BASE_URL = "https://samkiel.online/api/proxy"
-DOWNLOAD_ENDPOINT = f"https://{settings.MOVIEBOX_API_HOST_V2}/wefeed-h5-bff/web/subject/download"
+PROXY_BASE_URL = f"{settings.WEB_PROXY_BASE_URL.rstrip('/')}/api/proxy"
+DOWNLOAD_ENDPOINT = f"https://{settings.MOVIEBOX_DOWNLOAD_API_HOST}/wefeed-h5-bff/web/subject/download"
 
 
 def _normalize_quality(quality: str) -> str:
@@ -112,7 +112,10 @@ async def _fetch_downloads_via_proxy(subject_id: str, season: int, episode: int)
             response = await client.get(proxy_url)
             response.raise_for_status()
     except httpx.HTTPError as exc:
-        raise RuntimeError(f"Proxy fetch failed for subject {subject_id}: {exc}") from exc
+        details = ""
+        if isinstance(exc, httpx.HTTPStatusError):
+            details = f" status={exc.response.status_code} body={exc.response.text[:200]}"
+        raise RuntimeError(f"Proxy fetch failed for subject {subject_id}:{details} err={exc}") from exc
 
     try:
         payload = response.json()

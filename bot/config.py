@@ -18,8 +18,10 @@ class Settings:
     SUPABASE_KEY: str
     GROQ_API_KEY: str
     LINK_BASE_URL: str
+    WEB_PROXY_BASE_URL: str
     CDN_TTL_HOURS: int
     MOVIEBOX_API_HOST_V2: str
+    MOVIEBOX_DOWNLOAD_API_HOST: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -45,8 +47,10 @@ class Settings:
             SUPABASE_KEY=supabase_key,
             GROQ_API_KEY=groq_key,
             LINK_BASE_URL=os.getenv("LINK_BASE_URL", "https://movies.samkiel.dev"),
+            WEB_PROXY_BASE_URL=os.getenv("WEB_PROXY_BASE_URL", "https://samkiel.online"),
             CDN_TTL_HOURS=int(os.getenv("CDN_TTL_HOURS", "6")),
             MOVIEBOX_API_HOST_V2=os.getenv("MOVIEBOX_API_HOST_V2", "h5.aoneroom.com"),
+            MOVIEBOX_DOWNLOAD_API_HOST=os.getenv("MOVIEBOX_DOWNLOAD_API_HOST", "h5.aoneroom.com"),
         )
 
 
