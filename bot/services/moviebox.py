@@ -12,13 +12,12 @@ The library resolves CDN URLs in this order:
    -> Returns SearchResultsModel containing SearchResultsItem objects.
    -> Each item has subjectId, title, releaseDate, etc.
 
-2. DownloadableMovieFilesDetail(session, item).get_content_model()
-   -> Hits endpoint: /wefeed-h5-bff/web/subject/download
-   -> Params: {subjectId, se=0, ep=0} for movies, {subjectId, se=N, ep=N} for series
-   -> Requires Referer header: get_absolute_url(f"/movies/{item.detailPath}")
-   -> Returns DownloadableFilesMetadata (pydantic model) with:
-      - downloads: list[MediaFileMetadata]  <-- CDN URLs live here
-      - captions: list[CaptionFileMetadata]
+2. Build subject/download URL from subjectId + episode coordinates.
+    -> Endpoint: /wefeed-h5-bff/web/subject/download
+    -> Params: {subjectId, se=0, ep=0} for movies, {subjectId, se=N, ep=N} for series
+    -> Route request through Next.js proxy:
+        https://samkiel.online/api/proxy?url=<encoded subject/download URL>
+    -> Parse downloads from JSON payload data.downloads
 
 3. resolve_media_file_to_be_downloaded(quality, downloadable_metadata)
    -> Picks the MediaFileMetadata matching the requested quality.
@@ -35,10 +34,9 @@ The library resolves CDN URLs in this order:
    -> This is where bytes are actually written to disk.
    -> We stop at step 4 — we have the CDN URL without downloading.
 
-APPROACH: Direct CDN URL interception. We use the library's Search,
-DownloadableMovieFilesDetail, DownloadableTVSeriesFilesDetail, and
-resolve_media_file_to_be_downloaded to get the CDN URL without ever
-invoking the downloader. No temp files needed.
+APPROACH: Search with moviebox-api, then fetch subject/download through
+the web proxy to avoid Railway IP blocking. Resolve requested quality
+from the returned downloads list without invoking any file downloader.
 
 For series: DownloadableTVSeriesFilesDetail inherits from
 BaseDownloadableFilesDetail and uses get_content_model(season, episode)
