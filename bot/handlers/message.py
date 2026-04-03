@@ -19,7 +19,7 @@ from services.session import (
 )
 from services.moviebox import get_movie, get_episode, get_available_qualities
 from services.link import generate_id, build_url
-from services.supabase import save_media
+from services.supabase import save_media, save_collection, check_rate_limit
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -232,9 +232,15 @@ async def handle_message(message: Message) -> None:
 
     match intent["intent"]:
         case "download_movie":
+            if not await check_rate_limit(user_id):
+                await message.answer("⚠️ You've reached your daily limit of 10 requests. Please try again tomorrow.")
+                return
             await _handle_download_movie(message, intent, user_id)
 
         case "download_series":
+            if not await check_rate_limit(user_id):
+                await message.answer("⚠️ You've reached your daily limit of 10 requests. Please try again tomorrow.")
+                return
             await _handle_download_series(message, intent, user_id)
 
         case "clarify":

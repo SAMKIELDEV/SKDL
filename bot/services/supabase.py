@@ -108,3 +108,46 @@ async def get_collection(collection_id: str) -> dict | None:
         logger.error("Supabase lookup failed for collection_id=%s: %s", collection_id, exc)
         return None
 
+async def check_rate_limit(user_id: int, limit: int = 10) -> bool:
+    """
+    Check if a user has exceeded their daily quota.
+    Returns True if allowed, False if exceeded. Fails open on error.
+    """
+    now = datetime.now(timezone.utc)
+    try:
+        res = _client.table("rate_limits").select("*").eq("user_id", user_id).execute()
+        if res.data and len(res.data) > 0:
+            row = res.data[0]
+            # Handle potential 'Z' in isoformat from Supabase
+            reset_at_str = row["reset_at"].replace("Z", "+00:00")
+            reset_at = datetime.fromisoformat(reset_at_str)
+            
+            if now > reset_at:
+                # Reset window
+                _client.table("rate_limits").update({
+                    "request_count": 1,
+                    "last_request": now.isoformat(),
+                    "reset_at": (now + timedelta(days=1)).isoformat()
+                }).eq("user_id", user_id).execute()
+                return True
+            
+            if row["request_count"] >= limit:
+                return False
+                
+            _client.table("rate_limits").update({
+                "request_count": row["request_count"] + 1,
+                "last_request": now.isoformat()
+            }).eq("user_id", user_id).execute()
+            return True
+        else:
+            # First time user
+            _client.table("rate_limits").insert({
+                "user_id": user_id,
+                "request_count": 1,
+                "last_request": now.isoformat(),
+                "reset_at": (now + timedelta(days=1)).isoformat()
+            }).execute()
+            return True
+    except Exception as exc:
+        logger.error("Rate limit check failed for user_id=%s: %s", user_id, exc)
+        return True # Fail open so users aren't blocked on DB issues
