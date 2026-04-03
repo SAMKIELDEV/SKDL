@@ -46,7 +46,7 @@ export default function LighthouseLayout({
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 border-b border-white/5 bg-black/80 backdrop-blur-md z-50 flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
-          <Zap className="w-5 h-5 text-white fill-white" />
+          <Image src="/skdl.png" alt="Logo" width={32} height={32} />
           <span className="font-space font-bold tracking-tighter text-white text-lg">LIGHTHOUSE</span>
         </div>
         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2 text-white">

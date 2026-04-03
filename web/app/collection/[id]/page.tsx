@@ -39,7 +39,7 @@ export default async function CollectionPage({
     .from('collections')
     .select('*')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
   if (!colData) {
     return notFound()

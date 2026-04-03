@@ -33,7 +33,7 @@ export async function generateMetadata({
       .from('media')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
       
     if (data) {
       const row = data as MediaRow
@@ -116,7 +116,7 @@ export default async function LinkPage({
     .from('media')
     .select('*')
     .eq('id', id)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error('Supabase Error for id:', id, error)

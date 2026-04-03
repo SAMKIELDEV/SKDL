@@ -170,7 +170,7 @@ async def get_available_qualities(title: str, is_series: bool, season: int | Non
 
 
 async def get_episode(
-    title: str, season: int, episode: int, quality: str = "1080p"
+    title: str, season: int, episode: int, quality: str = "1080p", target=None
 ) -> dict:
     """
     Search for a TV series episode and return its CDN URL + metadata without downloading.
@@ -188,14 +188,15 @@ async def get_episode(
         if season == 0 and episode == 0:
             return await get_movie(title, quality)
 
-        # Step 1: Search for TV series
-        search = Search(session, query=title, subject_type=SubjectType.TV_SERIES, per_page=10)
-        search_results = await search.get_content_model()
+        # Step 1: Search for TV series (if target not provided)
+        if not target:
+            search = Search(session, query=title, subject_type=SubjectType.TV_SERIES, per_page=10)
+            search_results = await search.get_content_model()
 
-        if not search_results.items:
-            raise RuntimeError(f"No series results found for '{title}'")
+            if not search_results.items:
+                raise RuntimeError(f"No series results found for '{title}'")
 
-        target = search_results.first_item
+            target = search_results.first_item
 
         # Step 2: Resolve episode download metadata via SDK only.
         detail = DownloadableTVSeriesFilesDetail(session, target)
@@ -230,19 +231,29 @@ async def get_season_episodes(title: str, season: int, quality: str = "1080p") -
     """
     EXPERIMENTAL: Fetch all available episodes for a given season.
     Polls episodes 1-25 concurrently and returns a list of results.
+    One search is performed at the start to resolve the series target.
     """
     import asyncio
+    session = Session()
+    
+    # One search to find the show
+    search = Search(session, query=title, subject_type=SubjectType.TV_SERIES, per_page=1)
+    results = await search.get_content_model()
+    if not results.items:
+        return []
+    
+    target = results.first_item
     
     async def _fetch_safe(ep_num: int):
         try:
-            return await get_episode(title, season, ep_num, quality)
+            return await get_episode(title, season, ep_num, quality, target=target)
         except Exception:
             return None
 
     # Poll up to 25 episodes concurrently
     tasks = [_fetch_safe(i) for i in range(1, 26)]
-    results = await asyncio.gather(*tasks)
+    results_list = await asyncio.gather(*tasks)
     
     # Filter out None and return ordered list
-    valid_episodes = [r for r in results if r]
+    valid_episodes = [r for r in results_list if r]
     return sorted(valid_episodes, key=lambda x: x["episode"])

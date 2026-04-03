@@ -25,7 +25,7 @@ export async function GET(
       .from('media')
       .select('*')
       .eq('id', id)
-      .single()
+      .maybeSingle()
 
     if (error || !data) {
       return NextResponse.json({ error: 'Media not found' }, { status: 404 })
