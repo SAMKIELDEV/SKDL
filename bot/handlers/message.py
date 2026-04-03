@@ -8,10 +8,11 @@ from __future__ import annotations
 
 import logging
 import base64
-
+import time
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, PhotoSize
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from services.logger import log_event
 
 from services.groq_service import parse_intent
 from services.session import (
@@ -82,7 +83,7 @@ async def _present_quality_options(message: Message, intent: dict, user_id: int)
     return True
 
 
-async def _handle_download_movie(message: Message, intent: dict, user_id: int) -> None:
+async def _handle_download_movie(message: Message, intent: dict, user_id: int, start_time: float) -> None:
     """Process a download_movie intent."""
     title = intent.get("title")
     if not title:
@@ -111,6 +112,18 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int) -
             subject_id=result["subject_id"],
         )
 
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        log_event(
+            user_id=user_id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="download_movie",
+            query=intent.get("title"),
+            result_title=result["title"],
+            result_found=True,
+            duration_ms=elapsed_ms,
+        )
+
         reply = (
             f"🎬 **{result['title']} ({result['year']})**\n"
             f"Quality: {result['quality']}\n\n"
@@ -137,13 +150,29 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int) -
 
     except Exception as exc:
         logger.error("Movie download failed: %s", exc)
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        
+        # Check if it was a "not found" vs a technical error
+        is_not_found = "No results found" in str(exc) or "Could not resolve" in str(exc)
+        
+        log_event(
+            user_id=user_id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="not_found" if is_not_found else "error",
+            query=intent.get("title"),
+            result_found=False,
+            error_message=None if is_not_found else str(exc),
+            duration_ms=elapsed_ms,
+        )
+
         await status_msg.edit_text(
-            f"❌ Couldn't find or process **{title}**. Try a different title or check the spelling.",
+            f"❌ Couldn't find or process **{intent.get('title')}**. Try a different title or check the spelling.",
             parse_mode="Markdown",
         )
 
 
-async def _handle_download_series(message: Message, intent: dict, user_id: int) -> None:
+async def _handle_download_series(message: Message, intent: dict, user_id: int, start_time: float) -> None:
     """Process a download_series intent."""
     title = intent.get("title")
     season = intent.get("season")
@@ -154,7 +183,7 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int) 
         return
 
     if intent.get("bulk") and season is not None:
-        await _handle_bulk_series(message, intent, user_id)
+        await _handle_bulk_series(message, intent, user_id, start_time)
         return
 
     if season is None or episode is None:
@@ -191,6 +220,18 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int) 
             subject_id=result["subject_id"],
         )
 
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        log_event(
+            user_id=user_id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="download_series",
+            query=f"{intent.get('title')} S{season}E{episode}",
+            result_title=result["title"],
+            result_found=True,
+            duration_ms=elapsed_ms,
+        )
+
         reply = (
             f"📺 **{result['title']} S{result['season']}E{result['episode']}**\n"
             f"Quality: {result['quality']}\n\n"
@@ -216,13 +257,28 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int) 
 
     except Exception as exc:
         logger.error("Series download failed: %s", exc)
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        
+        is_not_found = "No series results found" in str(exc) or "No results found" in str(exc) or "Could not resolve" in str(exc)
+        
+        log_event(
+            user_id=user_id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="not_found" if is_not_found else "error",
+            query=f"{intent.get('title')} S{season}E{episode}",
+            result_found=False,
+            error_message=None if is_not_found else str(exc),
+            duration_ms=elapsed_ms,
+        )
+
         await status_msg.edit_text(
-            f"❌ Couldn't find **{title}** S{season}E{episode}. Check the title and episode number.",
+            f"❌ Couldn't find **{intent.get('title')}** S{season}E{episode}. Check the title and episode number.",
             parse_mode="Markdown",
         )
 
 
-async def _handle_bulk_series(message: Message, intent: dict, user_id: int) -> None:
+async def _handle_bulk_series(message: Message, intent: dict, user_id: int, start_time: float) -> None:
     """Process a bulk series download (entire season)."""
     title = intent.get("title")
     season = intent.get("season")
@@ -282,9 +338,34 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int) -> N
 
         await status_msg.edit_text(reply, parse_mode="Markdown")
         add_message(user_id, "assistant", f"I just successfully generated a bulk download collection for {episodes[0]['title']} Season {season}.")
+        
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        log_event(
+            user_id=user_id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="download_series",
+            query=f"{intent.get('title')} Season {season} (Bulk)",
+            result_title=episodes[0]["title"],
+            result_found=True,
+            duration_ms=elapsed_ms,
+        )
 
     except Exception as exc:
         logger.error("Bulk series download failed for '%s': %s", title, exc)
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        
+        log_event(
+            user_id=user_id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="error",
+            query=f"{intent.get('title')} Season {season} (Bulk)",
+            result_found=False,
+            error_message=str(exc),
+            duration_ms=elapsed_ms,
+        )
+
         await status_msg.edit_text(
             f"❌ Something went wrong while fetching the whole season. Try requesting a single episode or check back later.",
             parse_mode="Markdown",
@@ -294,6 +375,7 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int) -> N
 @router.message(F.text | F.photo)
 async def handle_message(message: Message) -> None:
     """Catch-all message handler — routes through Groq AI for both text and images."""
+    start_time = time.monotonic()
     if not message.text and not message.photo and not message.caption:
         return
 
@@ -337,19 +419,30 @@ async def handle_message(message: Message) -> None:
             if username not in ["samkiell", "samkiel488"] and not await check_rate_limit(user_id):
                 await message.answer("⚠️ whoa there big watcher, you've hit your daily limit of 10 movies. touch some grass and try again tomorrow!")
                 return
-            await _handle_download_movie(message, intent, user_id)
+            await _handle_download_movie(message, intent, user_id, start_time)
 
         case "download_series":
             username = (message.from_user.username or "").lower()
             if username not in ["samkiell", "samkiel488"] and not await check_rate_limit(user_id):
                 await message.answer("⚠️ whoa there binge-watcher, you've hit your daily limit of 10 episodes. touch some grass and try again tomorrow!")
                 return
-            await _handle_download_series(message, intent, user_id)
+            await _handle_download_series(message, intent, user_id, start_time)
 
         case "clarify":
             clarify_msg = intent.get("clarify_message") or "Could you give me more details?"
             add_message(user_id, "assistant", clarify_msg)
             await message.answer(f"🤔 {clarify_msg}")
+            
+            elapsed_ms = int((time.monotonic() - start_time) * 1000)
+            log_event(
+                user_id=user_id,
+                username=message.from_user.username,
+                display_name=message.from_user.full_name,
+                action="clarification",
+                query=user_text,
+                result_found=False,
+                duration_ms=elapsed_ms,
+            )
 
         case "help":
             await message.answer(HELP_TEXT, parse_mode="Markdown")
@@ -379,7 +472,7 @@ async def on_quality_selected(query: CallbackQuery) -> None:
     clear_pending_request(user_id)
     
     if intent["intent"] == "download_movie":
-        await _handle_download_movie(query.message, intent, user_id)
+        await _handle_download_movie(query.message, intent, user_id, time.monotonic()) # Reset timer for final download action
     else:
-        await _handle_download_series(query.message, intent, user_id)
+        await _handle_download_series(query.message, intent, user_id, time.monotonic())
 

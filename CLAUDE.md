@@ -223,6 +223,20 @@ create table media (
   expires_at    timestamptz not null,
   subject_id    text                       -- REQUIRED for IP-bound refresh
 );
+
+create table bot_logs (
+  id            uuid default gen_random_uuid() primary key,
+  user_id       bigint not null,
+  username      text,
+  display_name  text,
+  action        text not null,             -- search, download_movie, download_series, clarification, not_found, error
+  query         text,
+  result_title  text,
+  result_found  boolean default false,
+  error_message text,
+  duration_ms   integer,
+  created_at    timestamptz default now()
+);
 ```
 
 The table must already exist. Do not write migration files — the table is created manually in Supabase dashboard.
@@ -272,6 +286,8 @@ Follow this order exactly:
 - Auth is cookie-based, PIN from `LIGHTHOUSE_PIN` env var (8-hour session)
 - Protected by proxy (`web/proxy.ts`)
 - All Supabase queries for this page are server-side only via API routes
+- **Telemetry**: Unified API at `/api/lighthouse/stats` serving `bot_logs` and `media` metrics.
+- **Logging**: Bot events use fire-and-forget `asyncio.create_task(log_event(...))`.
 
 ---
 
