@@ -29,6 +29,9 @@ export const metadata: Metadata = {
   },
 }
 
+import ConditionalHeader from './components/ConditionalHeader'
+import ConditionalFooter from './components/ConditionalFooter'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,57 +40,55 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`antialiased bg-black text-white ${inter.variable} ${spaceGrotesk.variable} ${jbMono.variable} flex flex-col min-h-screen`}>
-        <header className="w-full border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between">
-            <Link href="/" className="text-3xl font-space font-bold tracking-tighter text-white">
-              SKDL<span className="text-zinc-400">.</span>
-            </Link>
-            <nav className="flex gap-6 items-center text-sm font-mono text-zinc-400">
-              <Link href="/discover" className="hover:text-white transition-colors">DISCOVER</Link>
-              <Link href="/sub" className="hover:text-white transition-colors">SUBTITLES</Link>
-            </nav>
-          </div>
-        </header>
+        <ConditionalHeader>
+          <header className="w-full border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between">
+              <Link href="/" className="text-3xl font-space font-bold tracking-tighter text-white">
+                SKDL<span className="text-zinc-400">.</span>
+              </Link>
+              <nav className="flex gap-6 items-center text-sm font-mono text-zinc-400">
+                <Link href="/discover" className="hover:text-white transition-colors">DISCOVER</Link>
+                <Link href="/sub" className="hover:text-white transition-colors">SUBTITLES</Link>
+              </nav>
+            </div>
+          </header>
+        </ConditionalHeader>
 
         <div className="flex-1">
           {children}
         </div>
 
-        <footer className="w-full border-t border-white/5 bg-black py-12 mt-auto">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-6">
-            <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
-              <Link href="/privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-zinc-400 transition-colors">Terms of Use</Link>
+        <ConditionalFooter>
+          <footer className="w-full border-t border-white/5 bg-black py-12 mt-auto">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 space-y-6">
+              <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
+                <Link href="/privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
+                <Link href="/terms" className="hover:text-zinc-400 transition-colors">Terms of Use</Link>
+              </div>
+              
+              <div className="text-center text-[10px] font-mono text-zinc-700 uppercase tracking-widest">
+                &copy; {new Date().getFullYear()} SKDL. Built by <a href="https://samkiel.dev" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors underline underline-offset-4 decoration-zinc-800">SAMKIEL</a>. 
+                <br />
+              All rights reserved.
+              </div>
             </div>
-            
-            <div className="text-center text-[10px] font-mono text-zinc-700 uppercase tracking-widest">
-              &copy; {new Date().getFullYear()} SKDL. Built by <a href="https://samkiel.dev" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors underline underline-offset-4 decoration-zinc-800">SAMKIEL</a>. 
-              <br />
-            All rights reserved.
-            </div>
-          </div>
-        </footer>
-        {/* Social Bar - Disabled for now */}
-        {/* {process.env.NEXT_PUBLIC_ADS === 'ON' && process.env.NEXT_PUBLIC_ADSTERRA_SOCIAL_BAR_SRC && (
-          <Script
-            src={process.env.NEXT_PUBLIC_ADSTERRA_SOCIAL_BAR_SRC}
-            strategy="afterInteractive"
-          />
-        )} */}
-        
-        {process.env.NEXT_PUBLIC_ADS === 'ON' && process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER && (
-          <Script
-            id="adsterra-popunder"
-            strategy="afterInteractive"
-            src={process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER.match(/src="([^"]+)"/)?.[1]}
-            dangerouslySetInnerHTML={
-              !process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER.includes('src=') 
-                ? { __html: process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER.replace(/<script[^>]*>/, '').replace(/<\/script>/, '') }
-                : undefined
-            }
-          />
-        )}
+          </footer>
+          
+          {process.env.NEXT_PUBLIC_ADS === 'ON' && process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER && (
+            <Script
+              id="adsterra-popunder"
+              strategy="afterInteractive"
+              src={process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER.match(/src="([^"]+)"/)?.[1]}
+              dangerouslySetInnerHTML={
+                !process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER.includes('src=') 
+                  ? { __html: process.env.NEXT_PUBLIC_ADSTERRA_POPUNDER.replace(/<script[^>]*>/, '').replace(/<\/script>/, '') }
+                  : undefined
+              }
+            />
+          )}
+        </ConditionalFooter>
       </body>
     </html>
   )
 }
+
