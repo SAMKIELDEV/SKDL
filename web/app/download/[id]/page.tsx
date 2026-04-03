@@ -63,6 +63,7 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
       const displayFilename = data.type === 'series' 
         ? `${safeFilename} S${data.season?.toString().padStart(2, '0')}E${data.episode?.toString().padStart(2, '0')}`
         : safeFilename
+      const brandedFilename = displayFilename + ' - SKDL (samkiel.online)'
 
       if (type === 'mkv') {
         setIsMuxing(true)
@@ -87,7 +88,7 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
             const url = window.URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
-            a.download = `${displayFilename}.mkv`
+            a.download = `${brandedFilename}.mkv`
             document.body.appendChild(a)
             a.click()
             a.remove()
@@ -101,7 +102,7 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
         return
       }
 
-      const downloadName = `${displayFilename}.mp4`
+      const downloadName = `${brandedFilename}.mp4`
       const proxyUrl = `/api/proxy?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(downloadName)}&dl=1`
       window.location.href = proxyUrl
       setLoading(false)

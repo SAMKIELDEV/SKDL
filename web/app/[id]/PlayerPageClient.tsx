@@ -39,6 +39,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
   const displayFilename = row.type === 'series' 
     ? `${safeFilename} S${row.season?.toString().padStart(2, '0')}E${row.episode?.toString().padStart(2, '0')}`
     : safeFilename
+  const brandedFilename = displayFilename + ' - SKDL (samkiel.online)'
 
   const handleDownloadMp4 = () => {
     const url = `/download/${row.id}?type=mp4&title=${encodeURIComponent(row.title)}&poster=${encodeURIComponent(posterUrl || '')}`
@@ -129,7 +130,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
               {subtitleUrl && (
                   <div className="text-center">
                       <a 
-                          href={`/api/proxy?url=${encodeURIComponent(subtitleUrl)}&filename=${encodeURIComponent(displayFilename)}.srt&dl=1`} 
+                          href={`/api/proxy?url=${encodeURIComponent(subtitleUrl)}&filename=${encodeURIComponent(brandedFilename)}.srt&dl=1`} 
                           className="text-[10px] font-mono text-zinc-500 hover:text-white transition-colors underline underline-offset-8 decoration-zinc-800 uppercase tracking-widest"
                       >
                           ↓ Download Subtitles (.srt)
