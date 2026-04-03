@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import AdBanner from '../components/AdBanner'
 
@@ -37,6 +37,28 @@ function mediaMetaLine(row: MediaRow): string {
 export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
   const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null)
   const [isMuxing, setIsMuxing] = useState(false)
+  const [statusIndex, setStatusIndex] = useState(0)
+
+  const statuses = [
+    "Preparing MKV...",
+    "Stitching Bits...",
+    "Muxing Streams...",
+    "Syncing Captions...",
+    "Polishing File...",
+    "Almost Ready..."
+  ]
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    if (isMuxing) {
+        interval = setInterval(() => {
+            setStatusIndex((prev) => (prev + 1) % statuses.length)
+        }, 1500)
+    } else {
+        setStatusIndex(0)
+    }
+    return () => clearInterval(interval)
+  }, [isMuxing])
 
   const safeFilename = row.title.replace(/[^a-zA-Z0-9.\- _]/g, '').trim()
   const displayFilename = row.type === 'series' 
@@ -120,15 +142,14 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
                     title={!subtitleUrl ? "No subtitles found for this title" : ""}
                     className="flex-1 flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {isMuxing ? "Preparing MKV..." : "Download MKV + Subs"}
+                    {isMuxing ? statuses[statusIndex] : "Download MKV + Subs"}
                 </button>
             </div>
 
             {subtitleUrl && (
                 <div className="text-center">
                     <a 
-                        href={subtitleUrl} 
-                        download={`${displayFilename}.srt`}
+                        href={`/api/proxy?url=${encodeURIComponent(subtitleUrl)}&filename=${encodeURIComponent(displayFilename)}.srt&dl=1`} 
                         className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-4 decoration-zinc-800"
                     >
                         ↓ Download Subtitles (.srt)

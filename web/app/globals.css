@@ -81,6 +81,16 @@ body {
   pointer-events: auto;
 }
 
+/* Custom Video Cues (Subtitles) */
+video::cue {
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.9em;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
 .plyr__control--overlaid {
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
