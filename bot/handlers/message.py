@@ -7,9 +7,10 @@ This router MUST be registered last in main.py.
 from __future__ import annotations
 
 import logging
+import base64
 
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, PhotoSize
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from services.groq_service import parse_intent
@@ -214,21 +215,45 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int) 
         )
 
 
-@router.message()
+@router.message(F.text | F.photo)
 async def handle_message(message: Message) -> None:
-    """Catch-all message handler — routes through Groq AI."""
-    if not message.text:
+    """Catch-all message handler — routes through Groq AI for both text and images."""
+    if not message.text and not message.photo and not message.caption:
         return
 
     user_id = message.from_user.id
-    user_text = message.text.strip()
+    user_text = message.text or message.caption or "What movie or series is in this image?"
+    user_text = user_text.strip()
+    
+    image_base64 = None
+    
+    if message.photo:
+        # Get the highest resolution photo
+        highest_res_photo: PhotoSize = message.photo[-1]
+        
+        try:
+            # Tell user we are looking at the image
+            status_msg = await message.answer("👁️ Looking at your image...")
+            
+            # Download file from Telegram servers
+            file_info = await message.bot.get_file(highest_res_photo.file_id)
+            downloaded_file = await message.bot.download_file(file_info.file_path)
+            
+            # Encode downloaded bytes to base64
+            image_base64 = base64.b64encode(downloaded_file.read()).decode('utf-8')
+            
+            await status_msg.delete()
+        except Exception as e:
+            logger.error("Failed to process image: %s", e)
+            await message.answer("⚠️ I couldn't standardise your image, sorry! Can you just type the name?")
+            return
 
     # Store user message in session
-    add_message(user_id, "user", user_text)
+    add_message(user_id, "user", "[Sent an Image]" if message.photo else user_text)
 
     # Get intent from Groq
     history = get_history(user_id)
-    intent = await parse_intent(history, user_text)
+    intent = await parse_intent(history, user_text, image_base64=image_base64)
 
     match intent["intent"]:
         case "download_movie":

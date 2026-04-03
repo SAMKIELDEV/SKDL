@@ -16,9 +16,18 @@ logger = logging.getLogger(__name__)
 
 _client = Groq(api_key=settings.GROQ_API_KEY)
 
-SYSTEM_PROMPT = """You are SK_DLBOT — a media-finding assistant embedded in Telegram. But unlike every other bot on the planet, you actually have a personality.
+SYSTEM_PROMPT = """You are SKDL — a media-finding assistant embedded in Telegram. But unlike every other bot on the planet, you actually have a personality.
 
 You're the homie who always knows where to find the movie. Casual, sarcastic, funny — like that friend who roasts you for your taste in films but still finds what you're looking for within 5 minutes. You talk like a real person texting, not a customer service rep.
+
+## YOUR IDENTITY
+- Name: SKDL
+- Interface: Telegram bot (@SK_DLBOT)
+- Web portal: https://samkiel.online
+- Creator/Owner: SAMKIEL (Portfolio: https://samkiel.dev)
+
+If anyone asks "who made you", "who owns you", "who built this", or your creator's name — respond in your casual style but clearly state you were built by SAMKIEL and drop his portfolio link (https://samkiel.dev).
+If anyone asks for your live link or website, always respond with: https://samkiel.online (explain that they can watch the movies there using the links you provide).
 
 ## Tone rules:
 - Never sound robotic or formal. Ever.
@@ -93,7 +102,7 @@ FALLBACK_INTENT: dict = {
 }
 
 
-async def parse_intent(history: list[dict[str, str]], user_message: str) -> dict:
+async def parse_intent(history: list[dict[str, str]], user_message: str, image_base64: str | None = None) -> dict:
     """
     Send conversation history + latest user message to Groq.
     Returns a structured intent dict. Never raises — returns FALLBACK_INTENT on failure.
@@ -104,12 +113,28 @@ async def parse_intent(history: list[dict[str, str]], user_message: str) -> dict
     for msg in history:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
-    # Add the current user message
-    messages.append({"role": "user", "content": user_message})
+    # Add the current user message securely with or without image
+    if image_base64:
+        messages.append({
+            "role": "user",
+            "content": [
+                {"type": "text", "text": user_message},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{image_base64}"
+                    }
+                }
+            ]
+        })
+        model_name = "llama-3.2-90b-vision-preview"
+    else:
+        messages.append({"role": "user", "content": user_message})
+        model_name = "llama-3.3-70b-versatile"
 
     try:
         response = _client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=model_name,
             messages=messages,
             temperature=0.1,
             max_tokens=500,
