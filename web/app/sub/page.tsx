@@ -76,6 +76,9 @@ export default function SubtitlesPage() {
           const data = await res.json();
           subtitleUrl = data.url; // Assuming API returns the URL for routing
       }
+      if (!subtitleUrl) {
+        throw new Error('Subtitle URL could not be resolved.');
+      }
 
       const redirectUrl = `/download/srt?type=srt&title=${encodeURIComponent(release_name)}&url=${encodeURIComponent(subtitleUrl)}`;
       window.location.href = redirectUrl;

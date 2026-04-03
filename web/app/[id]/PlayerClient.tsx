@@ -136,7 +136,7 @@ export default function PlayerClient({ proxyUrl, imdbId, query, poster, onSubtit
           <track
             key={subtitleUrl}
             kind="subtitles"
-            src={`/api/proxy?url=${encodeURIComponent(subtitleUrl)}`}
+            src={`/api/proxy?url=${encodeURIComponent(subtitleUrl || '')}`}
             srcLang="en"
             label="English"
             default
