@@ -3,6 +3,8 @@ import { getSupabaseClient } from '@/lib/supabase'
 import { getFreshCdnUrl } from '@/lib/moviebox'
 import { Metadata } from 'next'
 import PlayerClient from './PlayerClient'
+import AdBanner from '../components/AdBanner'
+import Link from 'next/link'
 
 interface MediaRow {
   id: string
@@ -136,14 +138,15 @@ function PlayerPage({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
 
         <PlayerClient proxyUrl={proxyUrl} />
 
+        <AdBanner />
+
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-          <a
-            href={downloadUrl}
-            download={safeFilename}
+          <Link
+            href={`/download/${row.id}?title=${encodeURIComponent(row.title)}&poster=${encodeURIComponent(row.poster_url || '')}`}
             className="flex-1 flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider"
           >
             Download File
-          </a>
+          </Link>
           <a
             href="https://t.me/SK_DLBOT"
             className="flex-1 flex justify-center items-center bg-transparent border border-white/20 text-white text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-white/5 transition-colors uppercase tracking-wider"

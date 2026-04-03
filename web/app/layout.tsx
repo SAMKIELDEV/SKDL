@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Script from 'next/script'
 import { Inter, Space_Grotesk, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
@@ -66,10 +67,16 @@ export default function RootLayout({
             <div className="text-center text-[10px] font-mono text-zinc-700 uppercase tracking-widest">
               &copy; {new Date().getFullYear()} SKDL. Built by <a href="https://samkiel.dev" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors underline underline-offset-4 decoration-zinc-800">SAMKIEL</a>. 
               <br />
-              All rights reserved.
+            All rights reserved.
             </div>
           </div>
         </footer>
+        {process.env.NEXT_PUBLIC_ADSTERRA_SOCIAL_BAR_SRC && (
+          <Script
+            src={process.env.NEXT_PUBLIC_ADSTERRA_SOCIAL_BAR_SRC}
+            strategy="afterInteractive"
+          />
+        )}
       </body>
     </html>
   )

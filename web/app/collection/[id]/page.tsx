@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +18,7 @@ interface MediaRow {
   episode: number
   quality: string
   cdn_url: string
+  poster_url?: string
 }
 
 function getSafeFilename(row: MediaRow): string {
@@ -48,7 +50,7 @@ export default async function CollectionPage({
   // Fetch all media items in this collection
   const { data: mediaData } = await supabase
     .from('media')
-    .select('id, title, season, episode, quality, cdn_url')
+    .select('id, title, season, episode, quality, cdn_url, poster_url')
     .in('id', collection.media_ids)
     .order('episode', { ascending: true })
 
@@ -96,13 +98,12 @@ export default async function CollectionPage({
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <a
-                        href={proxyUrl}
-                        download={getSafeFilename(ep)}
+                      <Link
+                        href={`/download/${ep.id}?title=${encodeURIComponent(ep.title)}&poster=${encodeURIComponent(ep.poster_url || '')}`}
                         className="inline-block bg-white text-black text-xs font-bold px-4 py-2 rounded shadow-sm hover:bg-zinc-200 transition-colors uppercase tracking-wider"
                       >
                         Download
-                      </a>
+                      </Link>
                     </td>
                   </tr>
                 )
