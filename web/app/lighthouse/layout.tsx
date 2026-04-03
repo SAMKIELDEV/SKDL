@@ -66,11 +66,11 @@ export default function LighthouseLayout({
             <Link href="/lighthouse" className="flex items-center gap-3 px-2 group">
               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 group-hover:bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.02)] overflow-hidden">
                 <Image 
-                  src="/sk" 
+                  src="/SKDL.png" 
                   alt="SKDL" 
-                  width={24} 
-                  height={24} 
-                  className="w-6 h-6 object-contain"
+                  width={64} 
+                  height={64} 
+                  className="w-64 h-64 object-contain"
                 />
               </div>
               <div className="flex flex-col">
