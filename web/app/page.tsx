@@ -101,7 +101,7 @@ export default function LandingPage() {
       <section className={styles.hero}>
         <div className={styles.heroGlow}></div>
         <div className={`${styles.heroContent} ${styles.reveal}`}>
-          <span className={styles.heroLabel}>Netflix and chill with skdl</span>
+          <span className={styles.heroLabel}>AI-POWERED CINEMATIC DISCOVERY // SKDL</span>
           <h1 className={styles.heroTitle}>Netflix and Chill<br />With SKDL</h1>
     
           <p className={styles.heroDesc}>
