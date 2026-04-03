@@ -388,6 +388,10 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
             f"❌ Something went wrong while fetching the whole season. Try requesting a single episode or check back later.",
             parse_mode="Markdown",
         )
+        # Clear the bulk intent so it doesn't loop
+        clear_pending_request(user_id)
+        from services.session import add_message # locally if needed
+        add_message(user_id, "assistant", "That bulk request failed, resetting your session.")
 
 
 @router.message(F.text | F.photo)
