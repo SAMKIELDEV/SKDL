@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useRef } from 'react'
 import { useSearchParams } from 'next/navigation'
 import AdBanner from '../../components/AdBanner'
 import Link from 'next/link'
@@ -28,12 +28,21 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
     "Almost Ready..."
   ]
 
+  const adOpenedRef = useRef(false);
+  const adUrl = process.env.NEXT_PUBLIC_ADSTERRA_DIRECT_LINK;
+
   useEffect(() => {
     if (counter > 0) {
       const timer = setTimeout(() => setCounter(counter - 1), 1000)
       return () => clearTimeout(timer)
+    } else {
+        // Auto-open ad on timer end
+        if (!adOpenedRef.current && adUrl) {
+            window.open(adUrl, '_blank');
+            adOpenedRef.current = true;
+        }
     }
-  }, [counter])
+  }, [counter, adUrl])
 
   useEffect(() => {
     let interval: NodeJS.Timeout

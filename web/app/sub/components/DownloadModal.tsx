@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface SubtitleResult {
   id: string;
@@ -20,14 +20,22 @@ export default function DownloadModal({ result, onClose, onDownload }: DownloadM
   const [countdown, setCountdown] = useState(10);
   const [isReady, setIsReady] = useState(false);
 
+  const adOpenedRef = useRef(false);
+  const adUrl = process.env.NEXT_PUBLIC_ADSTERRA_DIRECT_LINK;
+
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       setIsReady(true);
+      // Auto-open ad on timer end
+      if (!adOpenedRef.current && adUrl) {
+        window.open(adUrl, '_blank');
+        adOpenedRef.current = true;
+      }
     }
-  }, [countdown]);
+  }, [countdown, adUrl]);
 
   const handleDownload = () => {
     if (isReady) {
