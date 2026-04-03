@@ -11,7 +11,8 @@ import {
   Lock, 
   Menu,
   X,
-  Zap
+  Zap,
+  Settings
 } from 'lucide-react'
 import { Toaster, toast } from 'sonner'
 import { useState } from 'react'
@@ -35,6 +36,7 @@ export default function LighthouseLayout({
     { name: 'Dashboard', href: '/lighthouse', icon: LayoutDashboard },
     { name: 'Links Management', href: '/lighthouse/links', icon: Link2 },
     { name: 'Bot Engine', href: '/lighthouse/bot', icon: BarChart3 },
+    { name: 'Configure', href: '/lighthouse/settings', icon: Settings },
   ]
 
   const handleLogout = async () => {
@@ -66,11 +68,11 @@ export default function LighthouseLayout({
             <Link href="/lighthouse" className="flex items-center gap-3 px-2 group">
               <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 group-hover:bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.02)] overflow-hidden">
                 <Image 
-                  src="/SKDL.png" 
+                  src="/skdl.png" 
                   alt="SKDL" 
-                  width={64} 
-                  height={64} 
-                  className="w-64 h-64 object-contain"
+                  width={24} 
+                  height={24} 
+                  className="w-6 h-6 object-contain"
                 />
               </div>
               <div className="flex flex-col">

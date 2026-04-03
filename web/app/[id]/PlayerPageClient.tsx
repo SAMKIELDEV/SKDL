@@ -34,6 +34,22 @@ function formatSize(bytes?: number): string {
 export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
   const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null)
   const [posterUrl] = useState<string | undefined>(row.poster_url)
+  const [tagline, setTagline] = useState('STREAMING_SOURCE // SKDL_PRO')
+
+  useEffect(() => {
+    const fetchTagline = async () => {
+      try {
+        const res = await fetch('/api/lighthouse/settings')
+        const data = await res.json()
+        if (data.app_tagline) {
+          setTagline(data.app_tagline.replace(/"/g, '').toUpperCase())
+        }
+      } catch (e) {
+        console.error('Failed to fetch tagline:', e)
+      }
+    }
+    fetchTagline()
+  }, [])
 
   const safeFilename = row.title.replace(/[^a-zA-Z0-9.\- _]/g, '').trim()
   const displayFilename = row.type === 'series' 
@@ -76,7 +92,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
           <div className="space-y-6 flex-1 text-left flex flex-col justify-center h-full py-2">
             <div className="space-y-2">
               <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.4em] font-bold">
-                STREAMING_SOURCE // SKDL_PRO
+                {tagline}
               </p>
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-tight">
                 {row.title}
