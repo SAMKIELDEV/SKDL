@@ -50,11 +50,8 @@ export default function RootLayout({
         </div>
 
         <footer className="w-full border-t border-white/10 bg-black py-8 mt-auto">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row justify-between items-center text-xs font-mono text-zinc-600 space-y-4 md:space-y-0">
-            <div>&copy; {new Date().getFullYear()} SKDL AI.</div>
-            <div className="flex gap-4">
-              <a href="https://samkiel.online" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">SAMKIEL.ONLINE</a>
-            </div>
+          <div className="max-w-7xl mx-auto px-4 md:px-8 justify-center text-center text-xs font-mono text-zinc-600">
+            &copy; {new Date().getFullYear()} SKDL. All rights reserved.
           </div>
         </footer>
       </body>
