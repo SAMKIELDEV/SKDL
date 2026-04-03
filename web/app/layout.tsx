@@ -31,6 +31,7 @@ export const metadata: Metadata = {
 
 import ConditionalHeader from './components/ConditionalHeader'
 import ConditionalFooter from './components/ConditionalFooter'
+import GlobalNotice from './components/GlobalNotice'
 
 export default function RootLayout({
   children,
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`antialiased bg-black text-white ${inter.variable} ${spaceGrotesk.variable} ${jbMono.variable} flex flex-col min-h-screen`}>
+        <GlobalNotice />
         <ConditionalHeader>
           <header className="w-full border-b border-white/10 bg-black/80 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-5 flex items-center justify-between">
