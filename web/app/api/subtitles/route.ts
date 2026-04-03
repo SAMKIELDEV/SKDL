@@ -5,9 +5,6 @@ export async function GET(request: NextRequest) {
   const imdbId = searchParams.get('imdb_id')
   const lang = searchParams.get('lang') || 'en'
 
-  if (!imdbId) {
-    return NextResponse.json({ error: 'Missing imdb_id' }, { status: 400 })
-  }
 
   const apiKey = process.env.OPENSUBTITLES_API_KEY
   if (!apiKey) {
