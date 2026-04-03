@@ -270,7 +270,7 @@ Follow this order exactly:
 ## Lighthouse Admin
 - Route is `/lighthouse`
 - Auth is cookie-based, PIN from `LIGHTHOUSE_PIN` env var (8-hour session)
-- Protected by middleware (`web/middleware.ts`)
+- Protected by proxy (`web/proxy.ts`)
 - All Supabase queries for this page are server-side only via API routes
 
 ---
