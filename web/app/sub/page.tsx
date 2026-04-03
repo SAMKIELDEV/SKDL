@@ -103,7 +103,7 @@ export default function SubtitlesPage() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl blur-[100px] bg-gradient-to-tr from-zinc-800 to-transparent"></div>
         </div>
         
-        <div className="max-w-7xl mx-auto relative z-10 space-y-8 text-center flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="max-w-7xl mx-auto relative z-10 text-center flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-4 text-center md:text-left flex-1">
                 <h1 className="text-4xl md:text-6xl font-space font-bold tracking-tighter text-white">
                     FIND YOUR <span className="text-zinc-500">SUBTITLES</span>
@@ -115,19 +115,11 @@ export default function SubtitlesPage() {
                   <SubtitleSearch onSearch={handleSearch} isLoading={isLoading} />
                 </div>
             </div>
-
-            <div className="w-full md:w-auto opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all scale-75 md:scale-100 origin-center md:origin-right">
-                <AdBanner />
-            </div>
         </div>
       </section>
 
       {/* Results Section */}
       <section className="max-w-7xl mx-auto px-4 md:px-8 py-4">
-        <div className="mb-2">
-            <AdBanner />
-        </div>
-        
         {isLoading && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[...Array(8)].map((_, i) => (
@@ -154,6 +146,10 @@ export default function SubtitlesPage() {
             ))}
           </div>
         )}
+
+        <div className="mt-12 pt-12 border-t border-white/5 opacity-40">
+            <AdBanner />
+        </div>
 
         {!isLoading && !error && results.length === 0 && (
             <div className="text-center py-40 flex flex-col items-center justify-center opacity-20">
