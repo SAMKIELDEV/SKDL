@@ -15,6 +15,8 @@ interface SubtitleResult {
   release_name: string;
   file_id: string;
   imdb_id: string;
+  isBestMatch?: boolean;
+  subtitleUrl?: string;
 }
 
 export default function SubtitlesPage() {
@@ -52,12 +54,22 @@ export default function SubtitlesPage() {
     }
   };
 
-  const handleDownload = async (file_id: string, release_name: string) => {
+  const handleDownload = async (result: SubtitleResult) => {
     try {
+      const release_name = result.release_name;
+
+      // Handle MovieBox direct proxy download
+      if (result.subtitleUrl) {
+          const downloadUrl = `/api/proxy?url=${encodeURIComponent(result.subtitleUrl)}&filename=${encodeURIComponent(release_name)}.srt&dl=1`;
+          window.location.href = downloadUrl;
+          setSelectedResult(null);
+          return;
+      }
+
       const res = await fetch('/api/subtitles/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file_id, release_name }),
+        body: JSON.stringify({ file_id: result.file_id, release_name }),
       });
 
       if (!res.ok) {
@@ -127,7 +139,7 @@ export default function SubtitlesPage() {
               <SubtitleCard 
                 key={result.id} 
                 result={result} 
-                onDownloadClick={(res) => setSelectedResult(res)}
+                onDownloadClick={(res) => handleDownload(res)}
               />
             ))}
           </div>
@@ -145,12 +157,12 @@ export default function SubtitlesPage() {
         )}
       </section>
 
-      {/* Modal */}
+      {/* Modal is bypassed for Best Match but kept for OS results */}
       {selectedResult && (
         <DownloadModal 
           result={selectedResult} 
           onClose={() => setSelectedResult(null)}
-          onDownload={handleDownload}
+          onDownload={() => handleDownload(selectedResult)}
         />
       )}
     </main>

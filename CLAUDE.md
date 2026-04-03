@@ -29,6 +29,18 @@ Full spec is in `PRD.md`. Read it.
 
 ---
 
+## Data Sources
+
+- **moviebox-api**: Primary source for video URLs, posters, and subtitles.
+- **TMDB**: Fallback source for posters only (requires `TMDB_API_KEY`).
+- **OpenSubtitles**: Fallback source for subtitles only.
+
+Fallback chains must be explicit and ordered:
+- **Posters**: Database -> MovieBox -> TMDB -> Dark Placeholder.
+- **Subtitles**: MovieBox -> OpenSubtitles -> null.
+
+---
+
 ## Bot — Python Conventions
 
 ### Approved dependencies only:
@@ -138,6 +150,19 @@ web/
   lib/
     supabase.ts     # createClient() export
     moviebox.ts     # fresh CDN URL fetcher (server-side)
+```
+
+### Environment Variables:
+```
+SUPABASE_URL
+SUPABASE_KEY
+NEXT_PUBLIC_BOT_USERNAME
+GROQ_API_KEY
+OPENSUBTITLES_API_KEY
+TMDB_API_KEY
+NEXT_PUBLIC_ADSTERRA_SOCIAL_BAR_SRC
+NEXT_PUBLIC_ADSTERRA_BANNER_TAG
+NEXT_PUBLIC_ADS
 ```
 
 ### The `/api/proxy` logic:

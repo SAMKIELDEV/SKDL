@@ -10,6 +10,8 @@ interface SubtitleResult {
   release_name: string;
   file_id: string;
   imdb_id: string;
+  isBestMatch?: boolean;
+  subtitleUrl?: string;
 }
 
 interface SubtitleCardProps {
@@ -19,8 +21,14 @@ interface SubtitleCardProps {
 
 export default function SubtitleCard({ result, onDownloadClick }: SubtitleCardProps) {
   return (
-    <div className="bg-zinc-950 border border-white/5 rounded-xl p-5 hover:border-white/20 transition-all group">
-      <div className="flex flex-col h-full space-y-4">
+    <div className={`bg-zinc-950 border ${result.isBestMatch ? 'border-zinc-400 shadow-[0_0_20px_rgba(255,255,255,0.05)]' : 'border-white/5'} rounded-xl p-5 hover:border-white/20 transition-all group relative`}>
+      {result.isBestMatch && (
+        <div className="absolute -top-3 left-6 flex items-center gap-1.5 px-3 py-1 bg-zinc-400 text-black text-[10px] font-black font-mono rounded-full uppercase tracking-widest shadow-xl">
+          <span className="text-[12px]">✦</span> Best Match
+        </div>
+      )}
+
+      <div className="flex flex-col h-full space-y-4 pt-2">
         {/* Title & Year */}
         <div className="flex justify-between items-start gap-4">
           <div className="flex-1">

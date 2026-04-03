@@ -173,6 +173,25 @@ export default async function LinkPage({
     }
   }
 
+  // Final fallback: TMDB by IMDb ID
+  if (!finalPoster && row.imdb_id && process.env.TMDB_API_KEY) {
+      try {
+        const imdbId = row.imdb_id.startsWith('tt') ? row.imdb_id : `tt${row.imdb_id}`
+        const tmdbRes = await fetch(
+            `https://api.themoviedb.org/3/find/${imdbId}?api_key=${process.env.TMDB_API_KEY}&external_source=imdb_id`
+        )
+        if (tmdbRes.ok) {
+            const tmdbData = await tmdbRes.json()
+            const result = tmdbData.movie_results?.[0] || tmdbData.tv_results?.[0]
+            if (result?.poster_path) {
+                finalPoster = `https://image.tmdb.org/t/p/w500${result.poster_path}`
+            }
+        }
+      } catch (e) {
+          console.error('TMDB fallback failed:', e)
+      }
+  }
+
   const proxyUrl = `/api/proxy?url=${encodeURIComponent(finalUrl)}`
   
   // Pass metadata to the client
