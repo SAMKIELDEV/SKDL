@@ -54,8 +54,29 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center pt-8 md:pt-12 pb-24 px-4 md:px-6 font-sans">
-      <div className="w-full max-w-4xl space-y-8">
+      <div className="w-full max-w-4xl space-y-6 md:space-y-8">
         
+        {/* Header Section (Info Up top) */}
+        <div className="space-y-1 md:space-y-2">
+          <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.3em] font-bold">
+            SKDL_STREAM // PRIVATE
+          </p>
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+            {row.title}
+          </h1>
+          <div className="flex items-center gap-3 text-[10px] md:text-xs font-mono text-zinc-500 uppercase tracking-widest">
+            <span>{row.type === 'series' ? 'Series' : 'Movie'}</span>
+            <span className="w-1 h-1 rounded-full bg-zinc-800" />
+            <span className={row.quality ? 'text-white/80' : ''}>{row.quality}</span>
+            {row.type === 'series' && row.season && row.episode && (
+                <>
+                    <span className="w-1 h-1 rounded-full bg-zinc-800" />
+                    <span className="text-[#e8ff47]">S{row.season.toString().padStart(2, '0')}E{row.episode.toString().padStart(2, '0')}</span>
+                </>
+            )}
+          </div>
+        </div>
+
         {/* Player Container */}
         <div className="space-y-4">
           <PlayerClient 
@@ -65,37 +86,29 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
             onSubtitleFound={(url) => setSubtitleUrl(url)} 
           />
 
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0a0a0a] border border-white/5 p-5 rounded-xl">
-            <div className="space-y-1">
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight">{row.title}</h1>
-              <p className="text-xs font-mono text-zinc-500 uppercase tracking-widest">
-                {row.type === 'series' ? 'Series' : 'Movie'} • {row.quality} 
-                {row.type === 'series' && row.season && row.episode && ` • S${row.season.toString().padStart(2, '0')}E${row.episode.toString().padStart(2, '0')}`}
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3">
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#0a0a0a] border border-white/5 p-5 rounded-xl">
+            <div className="flex flex-col gap-3 w-full">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
                     <button
                         onClick={handleDownloadMp4}
-                        className="flex-1 sm:flex-none flex justify-center items-center bg-zinc-900 border border-white/10 text-white text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-800 transition-colors uppercase tracking-wider"
+                        className="flex-1 flex justify-center items-center bg-zinc-900 border border-white/10 text-white text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-800 transition-colors uppercase tracking-wider font-mono"
                     >
                         Download MP4
                     </button>
 
                     <button
                         onClick={handleDownloadMkv}
-                        className="flex-1 sm:flex-none flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider disabled:opacity-50"
+                        className="flex-1 flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider disabled:opacity-50 font-mono"
                     >
                         Download MKV + Subs
                     </button>
                 </div>
 
                 {subtitleUrl && (
-                    <div className="text-center sm:text-right">
+                    <div className="text-center md:text-right">
                         <a 
                             href={`/api/proxy?url=${encodeURIComponent(subtitleUrl)}&filename=${encodeURIComponent(displayFilename)}.srt&dl=1`} 
-                            className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-4 decoration-zinc-800 uppercase tracking-widest"
+                            className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-4 decoration-zinc-800 uppercase tracking-widest font-bold"
                         >
                             ↓ Download Subtitles (.srt)
                         </a>
