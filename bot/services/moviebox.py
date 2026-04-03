@@ -219,9 +219,13 @@ async def get_episode(
         }
 
     except Exception as exc:
-        logger.error(
-            "Failed to get episode '%s' S%dE%d: %s", title, season, episode, exc
-        )
+        err_msg = str(exc)
+        if "no downloadable mediafiles" in err_msg.lower():
+            logger.info("Episode '%s' S%dE%d not found (expected during bulk scan)", title, season, episode)
+        else:
+            logger.error(
+                "Failed to get episode '%s' S%dE%d: %s", title, season, episode, exc
+            )
         raise RuntimeError(
             f"Could not fetch '{title}' S{season}E{episode}: {exc}"
         ) from exc
