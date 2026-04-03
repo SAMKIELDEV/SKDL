@@ -1,4 +1,4 @@
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { getFreshCdnUrl } from '@/lib/moviebox'
 
@@ -20,7 +20,7 @@ function ExpiredPage({ title }: { title: string }) {
       <div className="text-center max-w-md">
         <div className="text-4xl mb-4">⏳</div>
         <h1 className="text-xl font-semibold text-white mb-2">{title}</h1>
-        <p className="text-gray-400 mb-6">Netflix and Chill with SKDL — but this link has expired.</p>
+        <p className="text-gray-400 mb-6">This download link has expired.</p>
         <a
           href="https://t.me/SK_DLBOT"
           className="inline-block bg-white text-black font-medium px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors"
@@ -29,6 +29,67 @@ function ExpiredPage({ title }: { title: string }) {
         </a>
       </div>
     </div>
+  )
+}
+
+function mediaMetaLine(row: MediaRow): string {
+  const bits: string[] = []
+  bits.push(row.type === 'series' ? 'Series' : 'Movie')
+  if (row.type === 'series' && row.season && row.episode) {
+    bits.push(`S${row.season}E${row.episode}`)
+  }
+  if (row.quality) {
+    bits.push(row.quality)
+  }
+  return bits.join(' • ')
+}
+
+function PlayerPage({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
+  return (
+    <main className="min-h-screen bg-[#0b1014] text-white px-4 py-6 md:py-10">
+      <div className="mx-auto max-w-6xl">
+        <div className="relative overflow-hidden rounded-2xl border border-teal-500/20 bg-gradient-to-br from-[#0d1e22] via-[#12131b] to-[#1c1410] p-4 md:p-7">
+          <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-teal-400/15 blur-3xl" />
+          <div className="pointer-events-none absolute -right-20 bottom-0 h-52 w-52 rounded-full bg-orange-400/10 blur-3xl" />
+
+          <div className="relative z-10 mb-5 md:mb-7">
+            <p className="text-[11px] uppercase tracking-[0.24em] text-teal-200/80">SKDL Private Screening</p>
+            <h1 className="mt-2 text-2xl md:text-4xl font-bold text-white font-serif">
+              {row.title}
+            </h1>
+            <p className="mt-2 text-sm md:text-base text-zinc-300">{mediaMetaLine(row)}</p>
+          </div>
+
+          <div className="relative z-10 overflow-hidden rounded-xl border border-white/15 bg-black/50 shadow-[0_15px_40px_rgba(0,0,0,0.35)]">
+            <video
+              controls
+              preload="metadata"
+              playsInline
+              className="w-full aspect-video bg-black"
+              src={proxyUrl}
+            >
+              Your browser does not support HTML5 video playback.
+            </video>
+          </div>
+
+          <div className="relative z-10 mt-5 flex flex-wrap gap-3">
+            <a
+              href={proxyUrl}
+              download
+              className="inline-flex items-center rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-semibold text-[#072227] hover:bg-teal-300"
+            >
+              Download File
+            </a>
+            <a
+              href="https://t.me/SK_DLBOT"
+              className="inline-flex items-center rounded-lg border border-zinc-500/60 bg-zinc-900/60 px-5 py-2.5 text-sm font-medium text-zinc-100 hover:bg-zinc-800"
+            >
+              Request Another on Telegram
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
   )
 }
 
@@ -89,6 +150,7 @@ export default async function LinkPage({
     }
   }
 
-  // Redirect through our robust proxy to bypass Referer/origin blocks
-  redirect(`/api/proxy?url=${encodeURIComponent(finalUrl)}`)
+  const proxyUrl = `/api/proxy?url=${encodeURIComponent(finalUrl)}`
+
+  return <PlayerPage row={row} proxyUrl={proxyUrl} />
 }
