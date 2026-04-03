@@ -17,25 +17,18 @@ interface DownloadModalProps {
 }
 
 export default function DownloadModal({ result, onClose, onDownload }: DownloadModalProps) {
-  const [countdown, setCountdown] = useState(10);
-  const [isReady, setIsReady] = useState(false);
-
-  const adOpenedRef = useRef(false);
-  const adUrl = process.env.NEXT_PUBLIC_ADSTERRA_DIRECT_LINK;
+  const adsOn = process.env.NEXT_PUBLIC_ADS_ON === 'ON'
+  const [countdown, setCountdown] = useState(adsOn ? 10 : 0);
+  const [isReady, setIsReady] = useState(!adsOn);
 
   useEffect(() => {
-    if (countdown > 0) {
+    if (adsOn && countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       setIsReady(true);
-      // Auto-open ad on timer end
-      if (!adOpenedRef.current && adUrl) {
-        window.open(adUrl, '_blank');
-        adOpenedRef.current = true;
-      }
     }
-  }, [countdown, adUrl]);
+  }, [countdown, adsOn]);
 
   const handleDownload = () => {
     if (isReady) {
@@ -101,19 +94,17 @@ export default function DownloadModal({ result, onClose, onDownload }: DownloadM
           </p>
 
           {/* AD SLOT — replace with your ad network script */}
-          <div className="w-full h-[250px] bg-zinc-900/50 rounded-xl border border-white/5 flex flex-col items-center justify-center space-y-2 relative overflow-hidden group">
-            <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-mono text-zinc-500 uppercase tracking-tighter border border-white/5">
-              Advertisement
+          {adsOn && (
+            <div className="w-full h-[250px] bg-zinc-900/50 rounded-xl border border-white/5 flex flex-col items-center justify-center space-y-2 relative overflow-hidden group">
+              <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[8px] font-mono text-zinc-500 uppercase tracking-tighter border border-white/5">
+                Advertisement
+              </div>
+              <div className="text-zinc-600 font-mono text-[10px] animate-pulse">
+                  AD_SLOT_300x250
+              </div>
+              <div className="w-24 h-24 opacity-10 blur-xl bg-zinc-400 rounded-full absolute -bottom-12 -left-12 group-hover:opacity-20 transition-opacity"></div>
             </div>
-            {/* 
-                DROP AD SCRIPT HERE 
-            */}
-            <div className="text-zinc-600 font-mono text-[10px] animate-pulse">
-                AD_SLOT_300x250
-            </div>
-            
-            <div className="w-24 h-24 opacity-10 blur-xl bg-zinc-400 rounded-full absolute -bottom-12 -left-12 group-hover:opacity-20 transition-opacity"></div>
-          </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col w-full gap-3">

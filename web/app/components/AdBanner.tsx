@@ -5,9 +5,10 @@ import { useEffect, useRef } from 'react'
 export default function AdBanner() {
   const adRef = useRef<HTMLDivElement>(null)
   const adTag = process.env.NEXT_PUBLIC_ADSTERRA_BANNER_TAG
+  const adsOn = process.env.NEXT_PUBLIC_ADS_ON === 'ON'
 
   useEffect(() => {
-    if (!adRef.current || !adTag) return
+    if (!adRef.current || !adTag || !adsOn) return
 
     // Clear previous content
     adRef.current.innerHTML = ''

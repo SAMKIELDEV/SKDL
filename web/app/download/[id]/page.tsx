@@ -13,7 +13,8 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
   const poster = searchParams.get('poster') || ''
   const type = searchParams.get('type') || 'mp4'
 
-  const [counter, setCounter] = useState(10)
+  const adsOn = process.env.NEXT_PUBLIC_ADS_ON === 'ON'
+  const [counter, setCounter] = useState(adsOn ? 10 : 0)
   const [loading, setLoading] = useState(false)
   const [isMuxing, setIsMuxing] = useState(false)
   const [statusIndex, setStatusIndex] = useState(0)
@@ -28,21 +29,12 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
     "Almost Ready..."
   ]
 
-  const adOpenedRef = useRef(false);
-  const adUrl = process.env.NEXT_PUBLIC_ADSTERRA_DIRECT_LINK;
-
   useEffect(() => {
     if (counter > 0) {
       const timer = setTimeout(() => setCounter(counter - 1), 1000)
       return () => clearTimeout(timer)
-    } else {
-        // Auto-open ad on timer end
-        if (!adOpenedRef.current && adUrl) {
-            window.open(adUrl, '_blank');
-            adOpenedRef.current = true;
-        }
     }
-  }, [counter, adUrl])
+  }, [counter])
 
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -147,15 +139,17 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
           <div className="space-y-1">
             <p className="text-sm font-medium text-zinc-400 max-w-md mx-auto leading-relaxed">
               You are about to download <span className="text-white font-bold">{title}</span>. 
-              Please wait for your secure link to be generated.
+              {adsOn && ' Please wait for your secure link to be generated.'}
             </p>
           </div>
         </div>
 
         {/* Ad Placement - Top */}
-        <div className="w-full border border-white/5 bg-[#0a0a0a] rounded-xl overflow-hidden p-4">
-            <AdBanner />
-        </div>
+        {adsOn && (
+          <div className="w-full border border-white/5 bg-[#0a0a0a] rounded-xl overflow-hidden p-4">
+              <AdBanner />
+          </div>
+        )}
 
         {/* Action / Countdown Center */}
         <div className="w-full max-w-sm space-y-8 flex flex-col items-center">
@@ -195,15 +189,17 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
             </div>
 
             {/* In-Flow Ad Slot */}
-            <div className="w-full h-[200px] bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center space-y-2 relative overflow-hidden group">
-                <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[7px] font-mono text-zinc-600 uppercase tracking-tighter border border-white/5">
-                    Sponsored
-                </div>
-                <div className="text-zinc-700 font-mono text-[9px] animate-pulse">
-                    AD_PLACEMENT_300x250
-                </div>
-                <div className="w-32 h-32 opacity-5 blur-2xl bg-zinc-400 rounded-full absolute -bottom-16 -left-16"></div>
-            </div>
+            {adsOn && (
+              <div className="w-full h-[200px] bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center space-y-2 relative overflow-hidden group">
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[7px] font-mono text-zinc-600 uppercase tracking-tighter border border-white/5">
+                      Sponsored
+                  </div>
+                  <div className="text-zinc-700 font-mono text-[9px] animate-pulse">
+                      AD_PLACEMENT_300x250
+                  </div>
+                  <div className="w-32 h-32 opacity-5 blur-2xl bg-zinc-400 rounded-full absolute -bottom-16 -left-16"></div>
+              </div>
+            )}
 
             <button
               onClick={handleGetLink}
