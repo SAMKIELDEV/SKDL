@@ -7,10 +7,11 @@ interface PlayerClientProps {
   proxyUrl: string
   imdbId?: string
   query?: string
+  poster?: string
   onSubtitleFound?: (url: string) => void
 }
 
-export default function PlayerClient({ proxyUrl, imdbId, query, onSubtitleFound }: PlayerClientProps) {
+export default function PlayerClient({ proxyUrl, imdbId, query, poster, onSubtitleFound }: PlayerClientProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
@@ -125,6 +126,7 @@ export default function PlayerClient({ proxyUrl, imdbId, query, onSubtitleFound 
       <video
         ref={videoRef}
         src={proxyUrl}
+        poster={poster}
         className="w-full h-full"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}

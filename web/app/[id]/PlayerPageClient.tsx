@@ -72,12 +72,12 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
         {/* Header Section with Integrated Poster Thumbnail */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
           {posterUrl && (
-            <div className="flex-shrink-0 w-32 md:w-44 aspect-[2/3] rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950 self-center md:self-start">
+            <div className="flex-shrink-0 w-32 md:w-44 aspect-[2/3] rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950 self-start">
               <img src={posterUrl} alt={row.title} className="w-full h-full object-cover" />
             </div>
           )}
           
-          <div className="space-y-6 flex-1 text-center md:text-left flex flex-col justify-center h-full py-2">
+          <div className="space-y-6 flex-1 text-left flex flex-col justify-center h-full py-2">
             <div className="space-y-2">
               <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.4em] font-bold">
                 STREAMING_SOURCE // SKDL_PRO
@@ -91,7 +91,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
             </div>
             
             {/* Quick Actions (Optional, but makes it feel like a dashboard) */}
-            <div className="flex flex-wrap justify-center md:justify-start gap-4">
+            <div className="flex flex-wrap justify-start gap-4">
                {/* Any badges like 4K, HDR, etc could go here */}
             </div>
           </div>
@@ -104,6 +104,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
               proxyUrl={proxyUrl} 
               imdbId={row.imdb_id} 
               query={displayFilename}
+              poster={posterUrl}
               onSubtitleFound={(url) => setSubtitleUrl(url)} 
             />
           </div>
