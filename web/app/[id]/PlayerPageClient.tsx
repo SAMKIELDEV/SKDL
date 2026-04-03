@@ -52,8 +52,8 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
     let interval: NodeJS.Timeout
     if (isMuxing) {
         interval = setInterval(() => {
-            setStatusIndex((prev) => (prev + 1) % statuses.length)
-        }, 1500)
+            setStatusIndex((prev) => Math.min(prev + 1, statuses.length - 1))
+        }, 2000) // Slightly slower for a more deliberate feel
     } else {
         setStatusIndex(0)
     }
