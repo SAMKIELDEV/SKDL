@@ -72,11 +72,6 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
         
         {/* Header Section with Integrated Poster Thumbnail */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
-          {posterUrl && (
-            <div className="flex-shrink-0 w-32 md:w-44 aspect-[2/3] rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950 self-start">
-              <img src={posterUrl} alt={row.title} className="w-full h-full object-cover" />
-            </div>
-          )}
           
           <div className="space-y-6 flex-1 text-left flex flex-col justify-center h-full py-2">
             <div className="space-y-2">
