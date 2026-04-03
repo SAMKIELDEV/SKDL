@@ -121,7 +121,7 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center gap-2">
             <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.3em] font-bold">
-              SKDL_MONETIZATION_GATE
+              SKDL_RATE_LIMIT_SYSTEM
             </span>
             <h1 className="text-3xl md:text-5xl font-space font-bold tracking-tighter italic text-white uppercase italic">
               {type === 'mkv' ? 'MKV + SUBS Ready' : 'Download MP4'}
