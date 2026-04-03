@@ -19,8 +19,8 @@ const jbMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'SKDL — Netflix and chill with skdl',
-  description: 'Netflix and chill with skdl — Instant AI-Powered TV & Movie Downloads.',
+  title: 'SKDL — Netflix and Chill with SKDL',
+  description: 'Netflix and chill with SKDL — Instant AI-Powered TV & Movie Downloads.',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',

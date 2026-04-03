@@ -31,3 +31,33 @@ body {
 .font-mono {
   font-family: var(--font-mono), monospace;
 }
+
+/* Custom Plyr Overrides */
+.plyr__time--current {
+  font-size: 1rem !important; /* Slightly larger */
+  font-weight: 600 !important;
+  color: #e8ff47 !important; /* SKDL signature color */
+  padding-left: 8px !important;
+}
+
+/* Hide volume slider until focused/clicked */
+.plyr__volume input[type="range"] {
+  max-width: 0;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-left: 0;
+  pointer-events: none;
+}
+
+.plyr__volume:focus-within input[type="range"],
+.plyr__volume:hover input[type="range"] {
+  max-width: 80px;
+  opacity: 1;
+  margin-left: 8px;
+  pointer-events: auto;
+}
+
+.plyr__control--overlaid {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
