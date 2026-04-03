@@ -2,9 +2,7 @@ import { notFound } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/supabase'
 import { getFreshCdnUrl } from '@/lib/moviebox'
 import { Metadata } from 'next'
-import PlayerClient from './PlayerClient'
-import AdBanner from '../components/AdBanner'
-import Link from 'next/link'
+import PlayerPageClient from './PlayerPageClient'
 
 interface MediaRow {
   id: string
@@ -18,6 +16,7 @@ interface MediaRow {
   subject_id?: string
   poster_url?: string
   description?: string
+  imdb_id?: string
 }
 
 export async function generateMetadata({
@@ -114,51 +113,6 @@ function getSafeFilename(row: MediaRow): string {
   return name + ' - SKDL(samkiel.online).mp4'
 }
 
-function PlayerPage({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
-  const safeFilename = getSafeFilename(row)
-  
-  // Create a specific download URL that instructs the proxy to use attachment disposition
-  const downloadUrl = `${proxyUrl}&filename=${encodeURIComponent(safeFilename)}&dl=1`
-
-  return (
-    <main className="min-h-screen bg-[#050505] text-white flex flex-col items-center pt-8 pb-12 px-4 selection:bg-white/20 font-sans">
-      <div className="w-full max-w-5xl space-y-6 md:space-y-8">
-        
-        <div className="space-y-1.5 md:space-y-2">
-          <p className="text-[10px] md:text-xs font-mono text-zinc-500 uppercase tracking-widest">
-            SKDL_STREAM // PRIVATE
-          </p>
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-tight">
-            {row.title}
-          </h1>
-          <p className="text-xs md:text-sm text-zinc-400 font-mono pt-1">
-            {mediaMetaLine(row)}
-          </p>
-        </div>
-
-        <PlayerClient proxyUrl={proxyUrl} />
-
-        <AdBanner />
-
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-          <Link
-            href={`/download/${row.id}?title=${encodeURIComponent(row.title)}&poster=${encodeURIComponent(row.poster_url || '')}`}
-            className="flex-1 flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider"
-          >
-            Download File
-          </Link>
-          <a
-            href="https://t.me/SK_DLBOT"
-            className="flex-1 flex justify-center items-center bg-transparent border border-white/20 text-white text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-white/5 transition-colors uppercase tracking-wider"
-          >
-            Request Another
-          </a>
-        </div>
-
-      </div>
-    </main>
-  )
-}
 export const dynamic = 'force-dynamic'
 
 export default async function LinkPage({
@@ -218,5 +172,5 @@ export default async function LinkPage({
 
   const proxyUrl = `/api/proxy?url=${encodeURIComponent(finalUrl)}`
 
-  return <PlayerPage row={row} proxyUrl={proxyUrl} />
+  return <PlayerPageClient row={row} proxyUrl={proxyUrl} />
 }
