@@ -39,9 +39,9 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     let interval: NodeJS.Timeout
     if (isMuxing) {
-        interval = setInterval(() => {
-            setStatusIndex((prev) => Math.min(prev + 1, statuses.length - 1))
-        }, 2000)
+      interval = setInterval(() => {
+        setStatusIndex((prev) => Math.min(prev + 1, statuses.length - 1))
+      }, 3000)
     }
     return () => clearInterval(interval)
   }, [isMuxing])
@@ -67,7 +67,6 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
       if (type === 'mkv') {
         setIsMuxing(true)
         try {
-            // 1. Resolve subtitles specifically for muxing
             const subRes = await fetch(`/api/subtitles?query=${encodeURIComponent(displayFilename)}&imdb_id=${data.imdb_id || ''}`)
             const subData = await subRes.json()
             
@@ -102,7 +101,6 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
         return
       }
 
-      // MP4 Case
       const downloadName = `${displayFilename}.mp4`
       const proxyUrl = `/api/proxy?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(downloadName)}&dl=1`
       window.location.href = proxyUrl
