@@ -10,7 +10,7 @@ import sys
 from aiogram import Bot, Dispatcher
 
 from config import settings
-from handlers import start, movie, series, message
+from handlers import start, movie, series, message, subtitle
 
 # Configure logging
 logging.basicConfig(
@@ -31,6 +31,7 @@ async def main() -> None:
     dp.include_router(start.router)
     dp.include_router(movie.router)
     dp.include_router(series.router)
+    dp.include_router(subtitle.router)
     dp.include_router(message.router)
 
     logger.info("SKDL Bot starting...")
