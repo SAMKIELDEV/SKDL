@@ -124,6 +124,7 @@ async def get_movie(title: str, quality: str = "1080p") -> dict:
             "year": target.releaseDate.year,
             "quality": f"{resolution}p" if resolution > 0 else quality,
             "subject_id": target.subjectId,
+            "imdb_id": getattr(target, "imdbId", None) or getattr(target, "imdb_id", None),
         }
 
     except Exception as exc:
@@ -206,6 +207,7 @@ async def get_episode(
             "episode": episode,
             "quality": f"{resolution}p" if resolution > 0 else quality,
             "subject_id": target.subjectId,
+            "imdb_id": getattr(target, "imdbId", None) or getattr(target, "imdb_id", None),
         }
 
     except Exception as exc:

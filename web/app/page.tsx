@@ -106,7 +106,7 @@ export default function LandingPage() {
     
           <p className={styles.heroDesc}>
             Experience lightning-fast movie and series downloads directly from Telegram. 
-            No ads. No interruptions. Pure entertainment.
+            AI-Powered. Instant. Pure entertainment.
           </p>
           <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className={`${styles.btn} ${styles.btnAccent}`}>
             Watch Latest Now!
@@ -142,9 +142,9 @@ export default function LandingPage() {
           </div>
           <div className={`${styles.featureCard} ${styles.reveal}`}>
             <div className={styles.featureIcon}>03</div>
-            <h3 className={styles.featureTitle}>Ad-Free Links</h3>
+            <h3 className={styles.featureTitle}>MKV + Subtitles</h3>
             <p className={styles.featureDesc}>
-              Say goodbye to pop-ups, fake download buttons, and timers. Our AI gives you direct server links straight to your device via SKDL streaming.
+              Full MKV support with integrated subtitles. Our AI automatically fetches accurate subs and muxes them into a single, high-quality file for the ultimate cinematic experience.
             </p>
           </div>
         </div>

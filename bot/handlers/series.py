@@ -75,6 +75,7 @@ async def cmd_series(message: Message) -> None:
             episode=result["episode"],
             requested_by=message.from_user.id,
             subject_id=result["subject_id"],
+            imdb_id=result.get("imdb_id"),
         )
 
         reply = (

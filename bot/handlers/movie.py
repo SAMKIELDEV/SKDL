@@ -49,6 +49,7 @@ async def cmd_movie(message: Message) -> None:
             quality=result["quality"],
             requested_by=message.from_user.id,
             subject_id=result["subject_id"],
+            imdb_id=result.get("imdb_id"),
         )
 
         reply = (
