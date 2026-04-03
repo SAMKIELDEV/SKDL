@@ -104,7 +104,7 @@ export default function LandingPage() {
           <span className={styles.heroLabel}>AI-POWERED CINEMATIC STREAMING & DOWNLOADS</span>
           <h1 className={styles.heroTitle}>Your Personal<br />Cinema Hub</h1>
           <p className={styles.heroDesc} style={{ fontWeight: '500', color: 'var(--foreground)', fontStyle: 'italic', marginBottom: '0.5rem' }}>
-            "Nextflix and chill with skdl"
+            "Netflix and chill with skdl"
           </p>
           <p className={styles.heroDesc}>
             Experience lightning-fast movie and series downloads directly from Telegram. 
@@ -130,23 +130,23 @@ export default function LandingPage() {
         <div className={styles.featuresGrid}>
           <div className={`${styles.featureCard} ${styles.reveal}`}>
             <div className={styles.featureIcon}>01</div>
-            <h3 className={styles.featureTitle}>Instant Access</h3>
+            <h3 className={styles.featureTitle}>Chat with AI</h3>
             <p className={styles.featureDesc}>
-              Search for any movie or series and get download links within milliseconds. Integrated deep-search across multiple indexes.
+              Just type naturally. Send "Hey chat, find me the new Avatar movie in 4K" and our intelligent bot instantly searches, resolves, and delivers the exact file you want.
             </p>
           </div>
           <div className={`${styles.featureCard} ${styles.reveal}`}>
             <div className={styles.featureIcon}>02</div>
             <h3 className={styles.featureTitle}>HD Quality</h3>
             <p className={styles.featureDesc}>
-              Choose from multiple resolutions, from 720p up to pristine 4K. Download the right file size for your device.
+              Choose from multiple resolutions presented right in the chat. Tell the AI what device you're on, and pull direct 720p, 1080p, or pristine 4K original files.
             </p>
           </div>
           <div className={`${styles.featureCard} ${styles.reveal}`}>
             <div className={styles.featureIcon}>03</div>
-            <h3 className={styles.featureTitle}>Ad-Free UI</h3>
+            <h3 className={styles.featureTitle}>Ad-Free Links</h3>
             <p className={styles.featureDesc}>
-              Say goodbye to pop-ups and fake download buttons. Direct server links straight to your device.
+              Say goodbye to pop-ups, fake download buttons, and timers. Our AI gives you direct server links straight to your device via SKDL streaming.
             </p>
           </div>
         </div>

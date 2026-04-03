@@ -116,13 +116,14 @@
 
 /* Hero Section */
 .hero {
-  height: 100vh;
+  min-height: calc(100vh - 72px);
+  height: auto;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
-  padding: 0 4vw;
+  padding: 8rem 4vw 6rem;
   position: relative;
   overflow: hidden;
 }
