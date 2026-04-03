@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import PlayerClient from './PlayerClient'
+import dynamic from 'next/dynamic'
 import AdBanner from '../components/AdBanner'
+
+// Dynamically import PlayerClient with SSR disabled to fix "document is not defined" error
+const PlayerClient = dynamic(() => import('./PlayerClient'), { ssr: false })
 
 interface MediaRow {
   id: string
