@@ -29,6 +29,7 @@ import {
   Legend
 } from 'recharts'
 import { format, formatDistanceToNow } from 'date-fns'
+import Image from 'next/image'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -68,7 +69,18 @@ export default function BotActivityPage() {
   if (loading && !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-        <div className="w-12 h-12 rounded-full border-t-2 border-white animate-spin" />
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full border-t-2 border-white animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Image 
+              src="/skdl.png" 
+              alt="Logo" 
+              width={20} 
+              height={20} 
+              className="w-5 h-5 object-contain opacity-80"
+            />
+          </div>
+        </div>
         <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.3em] font-bold">Synchronizing Bot Telemetry...</p>
       </div>
     )

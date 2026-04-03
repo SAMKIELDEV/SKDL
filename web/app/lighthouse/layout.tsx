@@ -13,6 +13,7 @@ import {
   X,
   Zap
 } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
 import { useState } from 'react'
 import { logout } from './login/actions'
 
@@ -63,8 +64,14 @@ export default function LighthouseLayout({
         <div className="flex flex-col h-full">
           <div className="p-8 pb-12">
             <Link href="/lighthouse" className="flex items-center gap-3 px-2 group">
-              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 group-hover:bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.02)]">
-                <Zap className="w-6 h-6 text-white fill-white" />
+              <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 group-hover:bg-white/10 shadow-[0_0_20px_rgba(255,255,255,0.02)] overflow-hidden">
+                <Image 
+                  src="/sk" 
+                  alt="SKDL" 
+                  width={24} 
+                  height={24} 
+                  className="w-6 h-6 object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="font-space font-bold tracking-tighter text-white text-xl uppercase leading-none">Lighthouse</span>
@@ -144,6 +151,19 @@ export default function LighthouseLayout({
           background: #333;
         }
       `}</style>
+      <Toaster 
+        theme="dark" 
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: 'rgba(8, 8, 8, 0.8)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            color: '#fff',
+            fontFamily: 'var(--font-sans)',
+          },
+        }}
+      />
     </div>
   )
 }

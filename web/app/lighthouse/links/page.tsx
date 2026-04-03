@@ -9,6 +9,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { format } from 'date-fns'
+import { toast } from 'sonner'
 
 export default function LinksPage() {
   const [links, setLinks] = useState<any[]>([])
@@ -45,9 +46,16 @@ export default function LinksPage() {
       if (res.ok) {
         setLinks(links.filter(l => l.id !== id))
         setConfirmDelete(null)
+        toast.success(`TRANSMISSION_${id}_TERMINATED`, {
+          description: 'Signal record successfully purged from registry.',
+          icon: <Trash2 className="w-4 h-4 text-red-500" />
+        })
       }
     } catch (error) {
       console.error('Failed to delete link:', error)
+      toast.error('PURGE_SEQUENCE_FAILED', {
+        description: 'Critical error encountered during record deletion.'
+      })
     } finally {
       setDeletingId(null)
     }
