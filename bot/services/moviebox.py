@@ -215,3 +215,25 @@ async def get_episode(
         raise RuntimeError(
             f"Could not fetch '{title}' S{season}E{episode}: {exc}"
         ) from exc
+
+
+async def get_season_episodes(title: str, season: int, quality: str = "1080p") -> list[dict]:
+    """
+    EXPERIMENTAL: Fetch all available episodes for a given season.
+    Polls episodes 1-25 concurrently and returns a list of results.
+    """
+    import asyncio
+    
+    async def _fetch_safe(ep_num: int):
+        try:
+            return await get_episode(title, season, ep_num, quality)
+        except Exception:
+            return None
+
+    # Poll up to 25 episodes concurrently
+    tasks = [_fetch_safe(i) for i in range(1, 26)]
+    results = await asyncio.gather(*tasks)
+    
+    # Filter out None and return ordered list
+    valid_episodes = [r for r in results if r]
+    return sorted(valid_episodes, key=lambda x: x["episode"])

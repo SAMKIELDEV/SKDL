@@ -222,6 +222,75 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int) 
         )
 
 
+async def _handle_bulk_series(message: Message, intent: dict, user_id: int) -> None:
+    """Process a bulk series download (entire season)."""
+    title = intent.get("title")
+    season = intent.get("season")
+    quality = intent.get("quality") or "1080p"
+
+    # 1. Update user - it's a long task
+    status_msg = await message.answer(
+        f"🌪️ Gathering all of **{title}** Season {season} at {quality} quality...\n"
+        f"This might take about 15-20 seconds. 🍿",
+        parse_mode="Markdown"
+    )
+
+    try:
+        from services.moviebox import get_season_episodes
+        episodes = await get_season_episodes(title, season, quality)
+
+        if not episodes:
+            await status_msg.edit_text(f"❌ Couldn't find any episodes for Season {season} of **{title}**.")
+            return
+
+        # 2. Save each episode to the media table & collect IDs
+        media_ids = []
+        for ep in episodes:
+            link_id = generate_id()
+            await save_media(
+                link_id=link_id,
+                title=ep["title"],
+                cdn_url=ep["cdn_url"],
+                media_type="series",
+                quality=ep["quality"],
+                season=ep["season"],
+                episode=ep["episode"],
+                requested_by=user_id,
+                subject_id=ep["subject_id"],
+            )
+            media_ids.append(link_id)
+
+        # 3. Create a collection
+        collection_id = generate_id()
+        await save_collection(
+            collection_id=collection_id,
+            title=episodes[0]["title"],
+            season=season,
+            media_ids=media_ids,
+            created_by=user_id
+        )
+
+        collection_url = f"{settings.WEB_PROXY_BASE_URL}/collection/{collection_id}"
+
+        reply = (
+            f"✅ **Season Complete!**\n\n"
+            f"📺 **{episodes[0]['title']} — Season {season}**\n"
+            f"📦 Total: {len(episodes)} episodes\n\n"
+            f"📥 {collection_url}\n"
+            f"⏳ Link expires in 6 hours"
+        )
+
+        await status_msg.edit_text(reply, parse_mode="Markdown")
+        add_message(user_id, "assistant", f"I just successfully generated a bulk download collection for {episodes[0]['title']} Season {season}.")
+
+    except Exception as exc:
+        logger.error("Bulk series download failed for '%s': %s", title, exc)
+        await status_msg.edit_text(
+            f"❌ Something went wrong while fetching the whole season. Try requesting a single episode or check back later.",
+            parse_mode="Markdown",
+        )
+
+
 @router.message(F.text | F.photo)
 async def handle_message(message: Message) -> None:
     """Catch-all message handler — routes through Groq AI for both text and images."""
