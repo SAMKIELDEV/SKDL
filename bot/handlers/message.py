@@ -69,8 +69,13 @@ async def _present_quality_options(message: Message, intent: dict, user_id: int)
         builder.button(text=f"🎬 {q['label']} ({mb_size}MB)", callback_data=f"q:{q['label']}")
 
     builder.adjust(1)
+    
+    display_title = data.get('title', title)
+    if is_series and season is not None and episode is not None:
+        display_title += f" S{season}E{episode}"
+        
     await status_msg.edit_text(
-        f"✅ Found **{data.get('title', title)}**.\nChoose your quality 👇",
+        f"✅ Found **{display_title}**.\nChoose your quality 👇",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
     )
