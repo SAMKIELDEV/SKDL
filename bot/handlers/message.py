@@ -187,9 +187,25 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         return
 
     if season is None or episode is None:
+        # Build buttons for episodes if only episode is missing
+        builder = InlineKeyboardBuilder()
+        if season is not None and episode is None:
+            for i in range(1, 9):
+                builder.button(text=f"Ep {i}", callback_data=f"ep:{i}")
+            builder.adjust(4)
+        
+        # Use AI's chat response for natural tone, fallback if it's missing
+        chat_reply = intent.get("chat_response")
+        if not chat_reply or "example:" in chat_reply.lower():
+            if season is None:
+                chat_reply = f"I found **{title}**! Which season are we aiming for?"
+            else:
+                chat_reply = f"Dope, **{title}** Season {season}. Which episode are we diving into?"
+
+        set_pending_request(user_id, intent)
         await message.answer(
-            f"📺 I found **{title}**, but I need the season and episode number.\n"
-            f"Example: \"{title} season 2 episode 5\"",
+            chat_reply,
+            reply_markup=builder.as_markup() if (season is not None and episode is None) else None,
             parse_mode="Markdown",
         )
         return
@@ -472,7 +488,27 @@ async def on_quality_selected(query: CallbackQuery) -> None:
     clear_pending_request(user_id)
     
     if intent["intent"] == "download_movie":
-        await _handle_download_movie(query.message, intent, user_id, time.monotonic()) # Reset timer for final download action
+        await _handle_download_movie(query.message, intent, user_id, time.monotonic())
     else:
         await _handle_download_series(query.message, intent, user_id, time.monotonic())
+
+@router.callback_query(F.data.startswith("ep:"))
+async def on_episode_selected(query: CallbackQuery) -> None:
+    user_id = query.from_user.id
+    episode_num = int(query.data.split(":")[1])
+    
+    intent = get_pending_request(user_id)
+    if not intent:
+        await query.answer("Session expired. Please request again.", show_alert=True)
+        return
+        
+    await query.answer()
+    await query.message.delete()
+    
+    intent["episode"] = episode_num
+    # Ensure it's treated as series
+    intent["intent"] = "download_series"
+    clear_pending_request(user_id)
+    
+    await _handle_download_series(query.message, intent, user_id, time.monotonic())
 
