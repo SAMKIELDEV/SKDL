@@ -19,8 +19,8 @@ const jbMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'SKDL — Netflix and Chill with SKDL',
-  description: 'Instant AI-Powered TV & Movie Downloads.',
+  title: 'SKDL — Netflix and chill with skdl',
+  description: 'Netflix and chill with skdl — Instant AI-Powered TV & Movie Downloads.',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -42,6 +42,7 @@ export default function RootLayout({
               SKDL
             </Link>
             <nav className="flex gap-6 items-center text-sm font-mono text-zinc-400">
+              <span className="hidden md:block text-xs text-zinc-500">Netflix and chill with skdl</span>
               <Link href="/discover" className="hover:text-white transition-colors">DISCOVER</Link>
               <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className="text-white hover:text-zinc-300 transition-colors uppercase tracking-widest font-bold">
                 BOT
