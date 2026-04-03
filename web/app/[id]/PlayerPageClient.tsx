@@ -37,6 +37,11 @@ function mediaMetaLine(row: MediaRow): string {
 export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
   const [subtitleUrl, setSubtitleUrl] = useState<string | null>(null)
 
+  const safeFilename = row.title.replace(/[^a-zA-Z0-9.\- _]/g, '').trim()
+  const displayFilename = row.type === 'series' 
+    ? `${safeFilename} S${row.season?.toString().padStart(2, '0')}E${row.episode?.toString().padStart(2, '0')}`
+    : safeFilename
+
   const handleDownloadMp4 = () => {
     const url = `/download/${row.id}?type=mp4&title=${encodeURIComponent(row.title)}&poster=${encodeURIComponent(row.poster_url || '')}`
     window.location.href = url
@@ -56,7 +61,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
           <PlayerClient 
             proxyUrl={proxyUrl} 
             imdbId={row.imdb_id} 
-            query={row.title}
+            query={displayFilename}
             onSubtitleFound={(url) => setSubtitleUrl(url)} 
           />
 
@@ -69,20 +74,33 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
               </p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-                <button
-                    onClick={handleDownloadMp4}
-                    className="flex-1 sm:flex-none flex justify-center items-center bg-zinc-900 border border-white/10 text-white text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-800 transition-colors uppercase tracking-wider"
-                >
-                    Download MP4
-                </button>
+            <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                    <button
+                        onClick={handleDownloadMp4}
+                        className="flex-1 sm:flex-none flex justify-center items-center bg-zinc-900 border border-white/10 text-white text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-800 transition-colors uppercase tracking-wider"
+                    >
+                        Download MP4
+                    </button>
 
-                <button
-                    onClick={handleDownloadMkv}
-                    className="flex-1 sm:flex-none flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider disabled:opacity-50"
-                >
-                    Download MKV + Subs
-                </button>
+                    <button
+                        onClick={handleDownloadMkv}
+                        className="flex-1 sm:flex-none flex justify-center items-center bg-white text-black text-xs md:text-sm font-bold px-6 py-4 rounded-md hover:bg-zinc-200 transition-colors uppercase tracking-wider disabled:opacity-50"
+                    >
+                        Download MKV + Subs
+                    </button>
+                </div>
+
+                {subtitleUrl && (
+                    <div className="text-center sm:text-right">
+                        <a 
+                            href={`/api/proxy?url=${encodeURIComponent(subtitleUrl)}&filename=${encodeURIComponent(displayFilename)}.srt&dl=1`} 
+                            className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors underline underline-offset-4 decoration-zinc-800 uppercase tracking-widest"
+                        >
+                            ↓ Download Subtitles (.srt)
+                        </a>
+                    </div>
+                )}
             </div>
           </div>
         </div>
