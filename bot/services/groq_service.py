@@ -134,7 +134,7 @@ async def parse_intent(history: list[dict[str, str]], user_message: str, image_b
         model_name = "llama-3.2-11b-vision-preview"
     else:
         messages.append({"role": "user", "content": user_message})
-        model_name = "llama-3.3-70b-versatile"
+        model_name = "llama-3.1-8b-instant"
 
     try:
         response = _client.chat.completions.create(
@@ -199,4 +199,15 @@ async def parse_intent(history: list[dict[str, str]], user_message: str, image_b
         return FALLBACK_INTENT.copy()
     except Exception as exc:
         logger.error("Groq API call failed: %s", exc)
+        # Check for rate limit specifically
+        if "429" in str(exc) or "rate_limit" in str(exc).lower():
+            rate_limit_fallback = FALLBACK_INTENT.copy()
+            rate_limit_fallback["chat_response"] = (
+                "phew, I'm a bit overwhelmed right now! my AI brain is taking a quick nap. "
+                "you can still request movies manually though! just type:\n\n"
+                "🎬 `/movie [title]` — for movies\n"
+                "📺 `/series [title] [season] [episode]` — for series"
+            )
+            return rate_limit_fallback
+            
         return FALLBACK_INTENT.copy()
