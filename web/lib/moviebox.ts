@@ -72,16 +72,22 @@ export async function getMovieBoxDetails(
     url += `&se=${season}&ep=${episode}`
   }
   
-  const response = await fetch(url, { headers: DEFAULT_HEADERS, cache: 'no-store' })
-  if (!response.ok) {
-    throw new Error(`MovieBox API failed: ${response.statusText}`)
-  }
+  try {
+    const response = await fetch(url, { headers: DEFAULT_HEADERS, cache: 'no-store' })
+    if (!response.ok) {
+      console.warn(`MovieBox Detail Fetch Warning: ${response.status} ${response.statusText} for ID ${subjectId}`)
+      return { downloads: [], captions: [] }
+    }
 
-  const json = await response.json()
-  const downloads: MovieBoxDownload[] = json.data?.downloads || []
-  const captions: MovieBoxCaption[] = json.data?.captions || []
-  
-  return { downloads, captions }
+    const json = await response.json()
+    const downloads: MovieBoxDownload[] = json.data?.downloads || []
+    const captions: MovieBoxCaption[] = json.data?.captions || []
+    
+    return { downloads, captions }
+  } catch (err) {
+    console.error('MovieBox Detail API Error:', err)
+    return { downloads: [], captions: [] }
+  }
 }
 
 export async function getFreshCdnUrl(

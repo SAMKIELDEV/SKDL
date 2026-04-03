@@ -139,7 +139,7 @@ export default async function LinkPage({
   let finalSize = row.size || 0
   let finalPoster = row.poster_url
 
-  // If we have a subject_id, get a fresh IP-bound link for the current requester
+  // 1. Resolve MovieBox Details (Downloads and Captions)
   if (row.subject_id) {
     try {
       const details = await getMovieBoxDetails(
@@ -155,41 +155,30 @@ export default async function LinkPage({
         const sorted = downloads.sort((a, b) => (b.resolution || 0) - (a.resolution || 0))
         finalUrl = sorted[0].url
         finalSize = sorted[0].size || 0
+        console.log('Refreshed CDN URL via MovieBox Detail')
       }
     } catch (e) {
-      console.error('Failed to refresh CDN URL, falling back to original:', e)
+      console.error('Failed to refresh CDN URL via MovieBox Detail:', e)
     }
   }
 
-  // If poster is missing, try searching moviebox as primary source
+  // 2. Poster Resolution - Strictly MovieBox-first
   if (!finalPoster && row.title) {
     try {
       const searchRes = await searchMovieBox(row.title, row.type)
       if (searchRes?.cover?.url) {
         finalPoster = searchRes.cover.url
+        console.log('Found MovieBox Poster via search:', finalPoster)
       }
     } catch (e) {
-        console.error('Failed to search poster for player page:', e)
+      console.error('Failed to search MovieBox poster:', e)
     }
   }
 
-  // Final fallback: TMDB by IMDb ID
-  if (!finalPoster && row.imdb_id && process.env.TMDB_API_KEY) {
-      try {
-        const imdbId = row.imdb_id.startsWith('tt') ? row.imdb_id : `tt${row.imdb_id}`
-        const tmdbRes = await fetch(
-            `https://api.themoviedb.org/3/find/${imdbId}?api_key=${process.env.TMDB_API_KEY}&external_source=imdb_id`
-        )
-        if (tmdbRes.ok) {
-            const tmdbData = await tmdbRes.json()
-            const result = tmdbData.movie_results?.[0] || tmdbData.tv_results?.[0]
-            if (result?.poster_path) {
-                finalPoster = `https://image.tmdb.org/t/p/w500${result.poster_path}`
-            }
-        }
-      } catch (e) {
-          console.error('TMDB fallback failed:', e)
-      }
+  // Final fallback poster if MovieBox has absolutely nothing
+  const fallbackPoster = 'https://images.unsplash.com/photo-1574267432553-4b4628081c31?q=80&w=1000&auto=format&fit=crop'
+  if (!finalPoster) {
+      finalPoster = fallbackPoster
   }
 
   const proxyUrl = `/api/proxy?url=${encodeURIComponent(finalUrl)}`
