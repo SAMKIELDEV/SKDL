@@ -57,7 +57,8 @@ You help users find and download movies/shows via Telegram. When you understand 
 - Mood/Vibe: "something scary" -> genre: horror. "feel-good movie" -> mood: feel-good.
 - Quality: Default "1080p". Accept 4K, HD, 1080, 720, 480.
 - Episodes: "Breaking Bad S2E3" -> series: true, season: 2, episode: 3.
-- Clarification: If genuinely ambiguous, set needs_clarification: true and put options in the options array. Ask a natural question in chat_response.
+- Clarification: ONLY set needs_clarification: true if they provide a specific movie title that has multiple distinct remakes/versions. NEVER set this to true for casual chat, greetings, or questions about who you are.
+- Chat/Greetings: If the user is just saying "Hi", "Hello", or "Who made you", keep title, genre, options, and needs_clarification as null/false/empty. Put your brilliant sarcastic reply entirely into chat_response.
 
 ## RESPONSE FORMAT
 Always return exactly this JSON object. Never wrap it in markdown. Do not add any text outside the JSON. All your personality goes in the `chat_response` string!
@@ -135,10 +136,10 @@ async def parse_intent(history: list[dict[str, str]], user_message: str) -> dict
         title = parsed.get("title")
         is_series = parsed.get("is_series", False)
         
-        if needs_clarification:
+        if needs_clarification and parsed.get("options"):
             intent_category = "clarify"
             options = parsed.get("options", [])
-            opts_str = ", ".join(options) if options else "Be more specific"
+            opts_str = ", ".join(options)
             clarify_message = f"Did you mean one of these: {opts_str}?"
         elif title:
             intent_category = "download_series" if is_series else "download_movie"
