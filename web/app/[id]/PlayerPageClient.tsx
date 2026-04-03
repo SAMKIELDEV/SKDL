@@ -60,7 +60,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
         <div className="space-y-4">
           <div className="space-y-1">
             <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.3em] font-bold">
-              SKDL_STREAM // PRIVATE
+              SKDL_STREAMING // ENCRYPTED
             </p>
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tighter text-white leading-none">
               {row.title}
@@ -86,10 +86,6 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
         {/* Action Section */}
         <div className="flex flex-col items-center space-y-10 py-4">
             
-            <p className="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.3em]">
-                AD HELPS KEEP THIS SITE FREE
-            </p>
-
             <div className="w-full max-w-2xl flex flex-col sm:flex-row gap-4">
                 <button
                     onClick={handleDownloadMp4}
@@ -142,25 +138,6 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
             </div>
           )}
           
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-xs font-mono text-zinc-500 uppercase tracking-widest">Description</h3>
-              <p className="text-zinc-400 text-sm leading-relaxed">
-                {row.description || "No description available for this title."}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pb-8">
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Quality</h4>
-                <p className="text-sm font-medium">{row.quality}</p>
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Expires</h4>
-                <p className="text-sm font-medium">{new Date(row.expires_at).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

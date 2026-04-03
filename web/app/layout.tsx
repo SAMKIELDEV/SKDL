@@ -20,8 +20,8 @@ const jbMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'SKDL — Netflix and Chill with SKDL',
-  description: 'Netflix and chill with SKDL — Instant AI-Powered TV & Movie Downloads.',
+  title: 'SKDL — Instant AI-Powered TV & Movie Downloads',
+  description: 'Instant AI-Powered TV & Movie Downloads with SKDL.',
   icons: {
     icon: '/favicon.png',
     shortcut: '/favicon.png',
@@ -43,12 +43,8 @@ export default function RootLayout({
               SKDL.
             </Link>
             <nav className="flex gap-6 items-center text-sm font-mono text-zinc-400">
-              <span className="hidden md:block text-xs text-zinc-500">Netflix and chill with skdl</span>
               <Link href="/discover" className="hover:text-white transition-colors">DISCOVER</Link>
               <Link href="/sub" className="hover:text-white transition-colors">SUBTITLES</Link>
-              <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className="text-white hover:text-zinc-300 transition-colors uppercase tracking-widest font-bold">
-                BOT
-              </a>
             </nav>
           </div>
         </header>
@@ -62,7 +58,6 @@ export default function RootLayout({
             <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500">
               <Link href="/privacy" className="hover:text-[#e8ff47] transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-[#e8ff47] transition-colors">Terms of Use</Link>
-              <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className="hover:text-[#e8ff47] transition-colors">Support Bot</a>
             </div>
             
             <div className="text-center text-[10px] font-mono text-zinc-700 uppercase tracking-widest">

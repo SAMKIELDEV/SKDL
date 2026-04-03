@@ -102,11 +102,11 @@ export default function LandingPage() {
         <div className={styles.heroGlow}></div>
         <div className={`${styles.heroContent} ${styles.reveal}`}>
           <span className={styles.heroLabel}>AI-POWERED CINEMATIC DISCOVERY // SKDL</span>
-          <h1 className={styles.heroTitle}>Netflix and Chill<br />With SKDL</h1>
+          <h1 className={styles.heroTitle}>AI-POWERED<br />ENTERTAINMENT</h1>
     
           <p className={styles.heroDesc}>
-            Experience lightning-fast movie and series downloads directly from Telegram. 
-            AI-Powered. Instant. Pure entertainment.
+            Experience lightning-fast movie and series discovery. 
+            Instant. High Quality. Pure entertainment.
           </p>
           <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className={`${styles.btn} ${styles.btnAccent}`}>
             Watch Latest Now!
@@ -142,9 +142,9 @@ export default function LandingPage() {
           </div>
           <div className={`${styles.featureCard} ${styles.reveal}`}>
             <div className={styles.featureIcon}>03</div>
-            <h3 className={styles.featureTitle}>MKV + Subtitles</h3>
+            <h3 className={styles.featureTitle}>PRO MEDIA FORMATS</h3>
             <p className={styles.featureDesc}>
-              Full MKV support with integrated subtitles. Our AI automatically fetches accurate subs and muxes them into a single, high-quality file for the ultimate cinematic experience.
+              Full MKV support with integrated subtitles. Our download engine automatically processes accurate subs, delivering a single high-quality file ready for any device.
             </p>
           </div>
         </div>
