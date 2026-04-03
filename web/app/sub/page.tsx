@@ -85,7 +85,7 @@ export default function SubtitlesPage() {
   return (
     <main className="flex-1 w-full bg-black min-h-screen">
       {/* Hero Section */}
-      <section className="relative pt-24 pb-16 px-4 md:px-8 border-b border-white/5 overflow-hidden">
+      <section className="relative pt-12 pb-16 px-4 md:px-8 border-b border-white/5 overflow-hidden">
         <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl blur-[100px] bg-gradient-to-tr from-zinc-800 to-transparent"></div>
         </div>
