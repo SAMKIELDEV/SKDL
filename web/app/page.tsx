@@ -96,16 +96,7 @@ export default function LandingPage() {
       <div ref={cursorDotRef} className={styles.cursorDot}></div>
       <div ref={cursorRingRef} className={styles.cursorRing}></div>
 
-      <nav className={styles.nav}>
-        <Link href="/" className={styles.logo}>
-          SKDL<span>.</span>
-        </Link>
-        <div>
-          <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className={styles.navLink}>
-            Open Telegram
-          </a>
-        </div>
-      </nav>
+
 
       <section className={styles.hero}>
         <div className={styles.heroGlow}></div>
@@ -171,17 +162,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className={styles.footer}>
-        <div>&copy; {new Date().getFullYear()} SKDL. All rights reserved.</div>
-        <div style={{ display: 'flex', gap: '2rem' }}>
-          <a href="https://github.com/samkiell/SKDL" target="_blank" rel="noopener noreferrer" className={styles.navLink}>
-            SOURCE
-          </a>
-          <a href="https://samkiel.online" target="_blank" rel="noopener noreferrer" className={styles.navLink}>
-            SAMKIEL.ONLINE
-          </a>
-        </div>
-      </footer>
+
     </div>
   )
 }

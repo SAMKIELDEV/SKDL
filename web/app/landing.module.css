@@ -1,13 +1,13 @@
 .page {
-  --bg: #050505;
-  --bg-alpha: rgba(5, 5, 5, 0.85);
-  --accent: #ff2a2a;
-  --text-main: #fcfcfc;
-  --text-muted: #888888;
-  --border: rgba(255, 255, 255, 0.08);
-  --font-heading: var(--font-bebas), sans-serif;
-  --font-mono: var(--font-dm), monospace;
-  --font-body: var(--font-syne), sans-serif;
+  --bg: #000000;
+  --bg-alpha: rgba(0, 0, 0, 0.85);
+  --accent: #ffffff;
+  --text-main: #ffffff;
+  --text-muted: #a1a1aa;
+  --border: rgba(255, 255, 255, 0.1);
+  --font-heading: var(--font-space), sans-serif;
+  --font-mono: var(--font-mono), monospace;
+  --font-body: var(--font-inter), sans-serif;
 
   background-color: var(--bg);
   min-height: 100vh;
@@ -202,14 +202,14 @@
 
 .btnAccent {
   background-color: var(--accent);
-  color: var(--text-main);
+  color: var(--bg);
   border-color: var(--accent);
 }
 
 .btnAccent:hover {
   background-color: transparent;
   color: var(--accent);
-  box-shadow: 0 10px 20px rgba(255, 42, 42, 0.15);
+  box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15);
 }
 
 /* Ticker Section */
