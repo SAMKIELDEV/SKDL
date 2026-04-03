@@ -141,7 +141,7 @@ export default function SubtitlesPage() {
         )}
 
         <div className="mt-12 pt-12 border-t border-white/5 opacity-40">
-            <AdBanner />
+            <AdBanner adKey="subtitles-bottom" width={728} height={90} />
         </div>
 
         {!isLoading && !error && results.length === 0 && (

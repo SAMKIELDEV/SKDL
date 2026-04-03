@@ -164,7 +164,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
 
         {/* Ad Placement Bottom */}
         <div className="w-full opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-          <AdBanner />
+          <AdBanner adKey="player-bottom" width={728} height={90} />
         </div>
       </div>
     </div>

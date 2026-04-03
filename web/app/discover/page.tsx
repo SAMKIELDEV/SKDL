@@ -41,14 +41,14 @@ export default async function DiscoverPage(props: { searchParams: SearchParams }
                 </p>
             </div>
             <div className="w-full md:w-auto opacity-50 grayscale hover:grayscale-0 transition-all">
-                <AdBanner />
+                <AdBanner adKey="discover-top" width={300} height={250} />
             </div>
         </div>
 
         <DiscoverGrid initialData={data || []} />
         
         <div className="pt-12 border-t border-white/5">
-            <AdBanner />
+            <AdBanner adKey="discover-bottom" width={728} height={90} />
         </div>
       </div>
     </main>

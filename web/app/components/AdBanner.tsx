@@ -2,10 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-export default function AdBanner() {
-  const adRef = useRef<HTMLDivElement>(null)
-  const adTag = process.env.NEXT_PUBLIC_ADSTERRA_BANNER_TAG
-  const [adsEnabled, setAdsEnabled] = useState(process.env.NEXT_PUBLIC_ADS === 'ON')
+interface AdBannerProps {
+  adKey: string;       // unique key per placement to avoid conflicts
+  width?: number;
+  height?: number;
+}
+
+export default function AdBanner({ adKey, width = 300, height = 250 }: AdBannerProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const injected = useRef(false)
+  const [adsEnabled, setAdsEnabled] = useState(false)
 
   useEffect(() => {
     const fetchAdsStatus = async () => {
@@ -17,32 +23,45 @@ export default function AdBanner() {
         }
       } catch (e) {
         console.error('Failed to fetch ads settings:', e)
+        // Fallback to env var if API fails
+        setAdsEnabled(process.env.NEXT_PUBLIC_ADS === 'ON')
       }
     }
     fetchAdsStatus()
   }, [])
 
   useEffect(() => {
-    if (!adRef.current || !adTag || !adsEnabled) return
+    // Prevent double injection (React StrictMode)
+    if (injected.current || !containerRef.current || !adsEnabled) return
+    
+    const container = containerRef.current
+    const scriptSrc = process.env.NEXT_PUBLIC_ADSTERRA_BANNER_SRC
 
-    // Clear previous content
-    adRef.current.innerHTML = ''
+    if (!scriptSrc) return
+    injected.current = true
 
-    // Create a container and inject the script via ranges to ensure it executes
-    const range = document.createRange()
-    const fragment = range.createContextualFragment(adTag)
-    adRef.current.appendChild(fragment)
-  }, [adTag, adsEnabled])
+    // Clear any previous content
+    container.innerHTML = ""
 
-  if (!adTag) return null
+    // Create and append script element properly — innerHTML won't execute scripts
+    const script = document.createElement("script")
+    script.src = scriptSrc
+    script.async = true
+    script.setAttribute("data-cfasync", "false") // required by Adsterra
+
+    container.appendChild(script)
+  }, [adsEnabled])
+
+  if (!adsEnabled) return null
 
   return (
-    <div className="flex flex-col items-center gap-1 my-1">
-      <div 
-        ref={adRef} 
-        className="ad-wrapper flex justify-center w-full min-h-[20px] md:min-h-[150px] overflow-hidden" 
-        aria-hidden="true" 
-      />
+    <div className="flex flex-col items-center gap-1 my-4">
+      <div
+        style={{ minWidth: width, minHeight: height, display: "flex", justifyContent: "center" }}
+        aria-hidden="true"
+      >
+        <div ref={containerRef} id={`ad-container-${adKey}`} />
+      </div>
       <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">
         Ad helps keep this site free
       </p>

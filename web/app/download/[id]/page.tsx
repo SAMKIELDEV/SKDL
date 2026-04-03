@@ -164,11 +164,9 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
         </div>
 
         {/* Ad Placement - Top */}
-        {adsOn && (
-          <div className="w-full border border-white/5 bg-[#0a0a0a] rounded-xl overflow-hidden p-4">
-              <AdBanner />
-          </div>
-        )}
+        <div className="w-full border border-white/5 bg-[#0a0a0a] rounded-xl overflow-hidden p-4">
+            <AdBanner adKey="download-top" width={728} height={90} />
+        </div>
 
         {/* Action / Countdown Center */}
         <div className="w-full max-w-sm space-y-8 flex flex-col items-center">
@@ -208,17 +206,9 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
             </div>
 
             {/* In-Flow Ad Slot */}
-            {adsOn && (
-              <div className="w-full h-[200px] bg-zinc-900/40 rounded-2xl border border-white/5 flex flex-col items-center justify-center space-y-2 relative overflow-hidden group">
-                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/50 rounded text-[7px] font-mono text-zinc-600 uppercase tracking-tighter border border-white/5">
-                      Sponsored
-                  </div>
-                  <div className="text-zinc-700 font-mono text-[9px] animate-pulse">
-                      AD_PLACEMENT_300x250
-                  </div>
-                  <div className="w-32 h-32 opacity-5 blur-2xl bg-zinc-400 rounded-full absolute -bottom-16 -left-16"></div>
-              </div>
-            )}
+            <div className="w-full min-h-[250px] flex justify-center">
+              <AdBanner adKey="download-middle" width={300} height={250} />
+            </div>
 
             <button
               onClick={handleGetLink}
