@@ -67,7 +67,12 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
             </h1>
             <p className="text-xs font-mono text-zinc-500 uppercase tracking-[0.2em] font-medium pt-1">
                 {row.type === 'series' ? 'Series' : 'Movie'} • 
-                {row.type === 'series' && row.season && row.episode && ` S${row.season.toString().padStart(2, '0')}E${row.episode.toString().padStart(2, '0')} • `}
+                {row.type === 'series' && row.season && row.episode && (
+                  <span className="text-[#e8ff47]">
+                    S{row.season.toString().padStart(2, '0')}E{row.episode.toString().padStart(2, '0')} 
+                  </span>
+                )}
+                •{' '} 
                 {row.quality}
             </p>
           </div>
