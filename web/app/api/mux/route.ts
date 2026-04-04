@@ -143,16 +143,18 @@ async function handleMuxRequest(request: NextRequest) {
 
     console.info('[api/mux] starting streaming mux with ffmpeg...', { video: videoUrl })
 
-    // Build FFmpeg command with low-memory and reconnection logic
+    // Start with global options (must come before any -i)
     const ffmpegArgs = [
+        '-y',                        // Overwrite output files
+        '-max_alloc', '32M',         // Hard cap FFmpeg memory allocation
         '-headers', ffHeaders,
         '-reconnect', '1',
         '-reconnect_streamed', '1',
         '-reconnect_at_eof', '1',
         '-reconnect_delay_max', '2',
-        '-probesize', '5M',          // Limit probe size to 5MB to save memory
-        '-analyzeduration', '5M',    // Limit analysis duration
-        '-fflags', 'nobuffer',       // Disable buffering for lower memory/latency
+        '-probesize', '5M',
+        '-analyzeduration', '5M',
+        '-fflags', 'nobuffer',
         '-i', videoUrl,
     ]
 
@@ -178,8 +180,6 @@ async function handleMuxRequest(request: NextRequest) {
     }
 
     ffmpegArgs.push(
-        '-max_alloc', '25M', // Hard cap FFmpeg memory allocation for buffers
-        '-y',             // Overwrite
         '-f', 'matroska', // Output format
         'pipe:1'          // Output to STDOUT
     )
@@ -188,8 +188,10 @@ async function handleMuxRequest(request: NextRequest) {
     const ffmpeg = spawn(ffmpegPath, ffmpegArgs)
 
     // Handle process events outside the stream construction for clarity
+    let ffmpegLog = ''
     ffmpeg.stderr.on('data', (data) => {
         const msg = data.toString()
+        ffmpegLog += msg
         if (msg.includes('bitrate=') || msg.includes('frames=')) {
             // console.log(`[ffmpeg]: ${msg.trim()}`)
         }
@@ -197,6 +199,7 @@ async function handleMuxRequest(request: NextRequest) {
     ffmpeg.on('close', (code, signal) => {
         if (code !== 0) {
             console.error(`[api/mux] ffmpeg failed with code ${code} and signal ${signal}`)
+            console.error(`[ffmpeg error log]:\n${ffmpegLog}`)
         }
         if (hasLoadedSubs) {
             try { fs.unlinkSync(subtitleFile) } catch(e) {}
