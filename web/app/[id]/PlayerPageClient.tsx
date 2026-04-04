@@ -108,7 +108,7 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
             )}
           </div>
 
-          <div className="flex flex-col items-center space-y-1 md:space-y-6 pt-0 mt-1 md:mt-2 pb-6 md:pb-12">
+          <div className="flex flex-col items-center space-y-1 sm:space-y-2 md:space-y-6 pt-0 mt-1 sm:mt-0 md:mt-2 pb-6 md:pb-12">
               <div className="w-full max-w-2xl flex flex-col sm:flex-row gap-3 md:gap-4">
                   <button
                       onClick={handleDownloadMp4}
