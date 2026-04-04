@@ -143,14 +143,16 @@ async function handleMuxRequest(request: NextRequest) {
 
     console.info('[api/mux] starting streaming mux with ffmpeg...', { video: videoUrl })
 
-    // Start with global options (must come before any -i)
+    // Build FFmpeg command with robust reconnection and low-memory logic
     const ffmpegArgs = [
-        '-y',                        // Overwrite output files
+        '-y',
         '-headers', ffHeaders,
         '-reconnect', '1',
-        '-reconnect_streamed', '1',
         '-reconnect_at_eof', '1',
-        '-reconnect_delay_max', '2',
+        '-reconnect_streamed', '1',
+        '-reconnect_on_network_error', '1',
+        '-reconnect_on_http_error', '4xx,5xx',
+        '-reconnect_delay_max', '10', // Higher delay for better stability
         '-probesize', '5M',
         '-analyzeduration', '5M',
         '-fflags', 'nobuffer',
@@ -208,34 +210,38 @@ async function handleMuxRequest(request: NextRequest) {
         console.error('[api/mux] ffmpeg spawn error:', err)
     })
 
-    // We use Readable.toWeb to wrap the FFmpeg stdout with native backpressure
-    // This is critical for preventing OOM on Railway Free (512MB RAM)
-    // as it stops reading from FFmpeg if the user's connection is slow.
-    const webStream = Readable.toWeb(ffmpeg.stdout)
-    
-    // Use a wrapper to ensure FFmpeg is killed if the request is aborted
+    // We use a custom ReadableStream to perfectly manage FFmpeg process and backpressure
     const responseStream = new ReadableStream({
-        async start(controller) {
-            const reader = (webStream as any).getReader();
-            try {
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                        controller.close();
-                        break;
+        start(controller) {
+            ffmpeg.stdout.on('data', (chunk) => {
+                try {
+                    controller.enqueue(chunk)
+                    // If desiredSize is 0 or less, the buffer is full -> pause FFmpeg
+                    if (controller.desiredSize !== null && controller.desiredSize <= 0) {
+                        ffmpeg.stdout.pause()
                     }
-                    controller.enqueue(value);
+                } catch (e) {
+                    // Stream might be closed
+                    ffmpeg.kill('SIGKILL')
                 }
-            } catch (err) {
-                controller.error(err);
-            } finally {
-                reader.releaseLock();
-            }
+            })
+
+            ffmpeg.stdout.on('end', () => {
+                try { controller.close() } catch(e) {}
+            })
+
+            ffmpeg.on('error', (err) => {
+                try { controller.error(err) } catch(e) {}
+            })
+        },
+        pull() {
+            // This is called when the stream wants more data
+            ffmpeg.stdout.resume()
         },
         cancel() {
-            ffmpeg.kill('SIGKILL');
+            ffmpeg.kill('SIGKILL')
         }
-    });
+    })
     
     return new NextResponse(responseStream, {
         status: 200,
