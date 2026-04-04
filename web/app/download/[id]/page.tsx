@@ -163,7 +163,7 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
                             NODE_SYNC_STATUS
                         </span>
                         <h1 className="text-3xl md:text-5xl font-space font-bold tracking-tighter text-white uppercase italic">
-                            {type === 'mkv' ? 'MKV + SUBTITLES' : 'MP4 DOWNLOAD'}
+                            {type === 'mkv' ? 'MKV + SUBTITLES' : type === 'srt' ? 'SUBTITLE DOWNLOAD' : 'MP4 DOWNLOAD'}
                         </h1>
                     </div>
                     <div className="flex flex-col items-center gap-4">
@@ -249,7 +249,7 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
                                     <span>{isMuxing ? statuses[statusIndex] : 'GENERATING...'}</span>
                                 </>
                             ) : (
-                                <span>{counter > 0 ? `Wait ${counter}s` : 'Initialize Download'}</span>
+                                <span>{counter > 0 ? `Wait ${counter}s` : type === 'srt' ? 'DOWNLOAD SUBTITLE' : 'INITIALIZE DOWNLOAD'}</span>
                             )}
                         </div>
                         {/* Glow effect on hover */}
