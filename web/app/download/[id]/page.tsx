@@ -138,55 +138,50 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-zinc-800 blur-[150px]"></div>
       </div>
 
-      <div className="w-full max-w-2xl px-6 py-12 md:py-20 space-y-12">
+      <div className="w-full max-w-2xl px-6 py-6 md:py-16 space-y-8">
         {/* Navigation */}
         <div className="flex justify-between items-center">
             <Link href={`/${id}`} className="group flex items-center gap-2 text-[10px] font-mono text-zinc-500 hover:text-white transition-all uppercase tracking-widest">
                 <ArrowLeft className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
-                <span>Return to Player</span>
+                <span>Back</span>
             </Link>
             <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                 <ShieldCheck className="w-3 h-3 text-[#e8ff47]" />
-                <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-widest">Encrypted Direct Link</span>
+                <span className="text-[9px] font-mono text-zinc-400 uppercase tracking-widest leading-none">Secure Link</span>
             </div>
         </div>
 
         {/* Content Card */}
         <div className="relative group">
             <div className="absolute inset-0 bg-white/5 blur-2xl rounded-[2rem] group-hover:bg-[#e8ff47]/5 transition-colors"></div>
-            <div className="relative bg-zinc-950/50 backdrop-blur-xl border border-white/5 rounded-[2rem] p-8 md:p-12 space-y-10 flex flex-col items-center text-center">
+            <div className="relative bg-zinc-950/50 backdrop-blur-xl border border-white/5 rounded-[2rem] p-6 md:p-10 space-y-6 md:space-y-10 flex flex-col items-center text-center">
                 
                 {/* Header Info */}
-                <div className="space-y-4">
-                    <div className="flex flex-col items-center gap-2">
+                <div className="space-y-3">
+                    <div className="flex flex-col items-center gap-1">
                         <span className="text-[10px] font-mono text-[#e8ff47] uppercase tracking-[0.4em] font-bold">
-                            NODE_SYNC_STATUS
+                            SKDL_SERVER_SYNC
                         </span>
-                        <h1 className="text-3xl md:text-5xl font-space font-bold tracking-tighter text-white uppercase italic">
+                        <h1 className="text-3xl md:text-5xl font-space font-bold tracking-tighter text-white uppercase leading-tight">
                             {type === 'mkv' ? 'MKV + SUBTITLES' : type === 'srt' ? 'SUBTITLE DOWNLOAD' : 'MP4 DOWNLOAD'}
                         </h1>
                     </div>
-                    <div className="flex flex-col items-center gap-4">
-                        {poster && (
-                            <div className="w-24 h-36 rounded-xl overflow-hidden shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8)] border border-white/10 ring-4 ring-white/5">
-                                <img src={poster} alt={title} className="w-full h-full object-cover" />
-                            </div>
-                        )}
-                        <p className="text-sm md:text-base text-zinc-400 max-w-xs leading-relaxed">
+                    <div className="flex flex-col items-center gap-3 pt-2">
+                        <p className="text-[11px] md:text-base text-zinc-400 max-w-xs leading-relaxed uppercase tracking-wider">
                             Generating a secure {type.toUpperCase()} link for <br/>
-                            <span className="text-white font-bold inline-block mt-1">{title}</span>
+                            <span className="text-white font-black inline-block mt-1 text-sm md:text-xl">{title}</span>
                         </p>
                     </div>
                 </div>
 
-                {/* Progress Visualizer */}
-                <div className="relative w-40 h-40 flex items-center justify-center">
+                {/* Progress Visualizer - Slightly smaller on mobile */}
+                <div className="relative w-32 h-32 md:w-40 md:h-40 flex items-center justify-center">
                     <svg className="w-full h-full -rotate-90">
                         {/* Background Circle */}
                         <circle
-                            cx="80"
-                            cy="80"
-                            r={radius}
+                            cx="50%"
+                            cy="50%"
+                            r="40%"
                             stroke="currentColor"
                             strokeWidth="3"
                             fill="transparent"
@@ -194,39 +189,39 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
                         />
                         {/* Progress Circle */}
                         <circle
-                            cx="80"
-                            cy="80"
-                            r={radius}
+                            cx="50%"
+                            cy="50%"
+                            r="40%"
                             stroke="currentColor"
                             strokeWidth="3"
                             fill="transparent"
-                            strokeDasharray={circumference}
-                            strokeDashoffset={offset}
+                            strokeDasharray="251.2%"
+                            strokeDashoffset={`${251.2 * (1 - counter / 10)}%`}
                             strokeLinecap="round"
-                            className="text-[#e8ff47] transition-all duration-1000 linear shadow-[0_0_10px_#e8ff47]"
+                            className="text-[#e8ff47] transition-all duration-1000 linear"
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-5xl font-space font-bold text-white tabular-nums">
-                            {counter > 0 ? counter : <Download className="w-8 h-8 animate-bounce" />}
+                        <span className="text-3xl md:text-5xl font-space font-bold text-white tabular-nums leading-none">
+                            {counter > 0 ? counter : <Download className="w-6 h-6 md:w-8 md:h-8 animate-bounce" />}
                         </span>
-                        <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest mt-1">
+                        <span className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest mt-1 leading-none">
                             {counter > 0 ? 'Seconds' : 'Ready'}
                         </span>
                     </div>
                 </div>
 
                 {/* Status Indicator */}
-                <div className="min-h-[20px]">
+                <div className="min-h-[16px]">
                     {counter > 0 ? (
-                        <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                            <Clock className="w-3 h-3 animate-pulse" />
-                            <span>Verifying security nodes...</span>
+                        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+                            <Clock className="w-3 h-3 animate-pulse text-zinc-600" />
+                            <span>Verifying...</span>
                         </div>
                     ) : (
-                        <div className="flex items-center gap-2 text-[10px] font-mono text-[#e8ff47] uppercase tracking-widest">
+                        <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-mono text-[#e8ff47] uppercase tracking-widest">
                             <ShieldCheck className="w-3 h-3" />
-                            <span>Secure link verified</span>
+                            <span>Verified</span>
                         </div>
                     )}
                 </div>
