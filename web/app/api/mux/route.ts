@@ -79,18 +79,30 @@ async function handleMuxRequest(request: NextRequest) {
         }
     }
     
-    // Build headers string for FFmpeg
+    // Build headers string for FFmpeg - Matching api/proxy exactly
     const ffHeaders = [
-        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Referer: https://fmoviesunblocked.net/',
         'Origin: https://h5.aoneroom.com',
+        'Accept: */*',
+        'Accept-Language: en-US,en;q=0.9',
+        'Connection: keep-alive',
+        'Sec-Fetch-Dest: video',
+        'Sec-Fetch-Mode: no-cors',
+        'Sec-Fetch-Site: cross-site',
+        'Accept-Encoding: identity',
+        'Range: bytes=0-',
     ].join('\r\n') + '\r\n'
 
     console.info('[api/mux] starting streaming mux with ffmpeg...', { video: videoUrl })
 
-    // Run FFmpeg command - STREAM TO STDOUT
+    // Build FFmpeg command with reconnection logic for stability
     const ffmpegArgs = [
         '-headers', ffHeaders,
+        '-reconnect', '1',
+        '-reconnect_streamed', '1',
+        '-reconnect_at_eof', '1',
+        '-reconnect_delay_max', '4',
         '-i', videoUrl,
     ]
 
@@ -108,7 +120,7 @@ async function handleMuxRequest(request: NextRequest) {
         ffmpegArgs.push(
             '-map', '1:s',    // Map second input (SRT) subtitle
             '-c', 'copy',     // Stream copy both video and audio
-            '-c:s', 'srt',     // Subtitle codec
+            '-c:s', 'srt',    // Subtitle codec
             '-metadata:s:s:0', 'language=eng'
         )
     } else {
@@ -118,8 +130,6 @@ async function handleMuxRequest(request: NextRequest) {
     ffmpegArgs.push(
         '-y',             // Overwrite
         '-f', 'matroska', // Output format
-        // Optimization for streaming Matroska
-        '-reserve_index_space', '1024', 
         'pipe:1'          // Output to STDOUT
     )
 
