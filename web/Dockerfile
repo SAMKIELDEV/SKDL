@@ -19,6 +19,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Provide dummy variables during build to prevent failures during route evaluation/pre-rendering
+ENV SUPABASE_URL=http://placeholder.supabase.co
+ENV SUPABASE_KEY=placeholder
+ENV NEXT_PUBLIC_SUPABASE_URL=http://placeholder.supabase.co
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=placeholder
+
 # Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED 1
 
