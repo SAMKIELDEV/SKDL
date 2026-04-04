@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from 'react'
-import '../globals.css'
 
 interface PlayerClientProps {
   proxyUrl: string

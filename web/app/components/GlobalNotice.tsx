@@ -3,20 +3,42 @@
 import { useState, useEffect } from 'react'
 import { Info, X } from 'lucide-react'
 
+// Simple global cache to avoid multiple components fetching the same settings
+let cachedNotice: string | null = null;
+let isFetchingNotice = false;
+const noticeSubscribers: ((notice: string | null) => void)[] = [];
+
 export default function GlobalNotice() {
-  const [notice, setNotice] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(cachedNotice)
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
+    if (cachedNotice !== null) {
+      setNotice(cachedNotice);
+      return;
+    }
+
+    if (isFetchingNotice) {
+      noticeSubscribers.push((n) => setNotice(n));
+      return;
+    }
+
     const fetchNotice = async () => {
+      isFetchingNotice = true;
       try {
         const res = await fetch('/api/lighthouse/settings')
+        if (!res.ok) throw new Error('API failed')
         const data = await res.json()
-        if (data.app_notice) {
-          setNotice(data.app_notice)
-        }
+        
+        cachedNotice = data.app_notice || ""; // use empty string to indicate "fetched but empty"
+        setNotice(data.app_notice || null);
+        
+        noticeSubscribers.forEach(sub => sub(data.app_notice || null));
+        noticeSubscribers.length = 0;
       } catch (e) {
         console.error('Failed to fetch global notice:', e)
+      } finally {
+        isFetchingNotice = false;
       }
     }
     fetchNotice()
