@@ -38,7 +38,7 @@ export default function AdBanner({ adKey, width = 300, height = 250 }: AdBannerP
         if (!res.ok) throw new Error('API failed')
         const data = await res.json()
         
-        const enabled = data.ads_enabled === 'true';
+        const enabled = data.ads_enabled === 'true' || data.ads_enabled === 'ON' || data.ads_enabled === true;
         cachedSettings = { ads_enabled: enabled };
         
         setAdsEnabled(enabled);
@@ -47,7 +47,8 @@ export default function AdBanner({ adKey, width = 300, height = 250 }: AdBannerP
       } catch (e) {
         console.error('Failed to fetch ads settings:', e)
         // Fallback to env var if API fails
-        const fallback = process.env.NEXT_PUBLIC_ADS === 'ON';
+        const envVal = (process.env.NEXT_PUBLIC_ADS || '').toUpperCase();
+        const fallback = envVal === 'ON' || envVal === 'TRUE';
         cachedSettings = { ads_enabled: fallback };
         setAdsEnabled(fallback);
         subscribers.forEach(sub => sub(cachedSettings!));

@@ -199,10 +199,13 @@ export default function BotActivityPage() {
               <PieChart>
                 <Pie
                   data={actionData}
-                  innerRadius={60}
-                  outerRadius={80}
+                  innerRadius={65}
+                  outerRadius={85}
                   paddingAngle={5}
                   dataKey="value"
+                  stroke="none"
+                  cx="50%"
+                  cy="45%"
                 >
                   {actionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -212,9 +215,12 @@ export default function BotActivityPage() {
                   contentStyle={{ backgroundColor: '#09090b', borderColor: '#27272a', fontSize: '10px', fontFamily: 'monospace' }}
                 />
                 <Legend 
-                   layout="vertical" 
-                   verticalAlign="middle" 
-                   align="right"
+                   layout="horizontal" 
+                   verticalAlign="bottom" 
+                   align="center"
+                   iconType="circle"
+                   iconSize={6}
+                   wrapperStyle={{ fontSize: '10px', paddingTop: '20px' }}
                    formatter={(value) => <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">{value}</span>}
                 />
               </PieChart>

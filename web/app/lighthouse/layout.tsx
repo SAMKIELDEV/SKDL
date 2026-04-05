@@ -35,7 +35,7 @@ export default function LighthouseLayout({
     { name: 'Dashboard', href: '/lighthouse', icon: LayoutDashboard },
     { name: 'Links Management', href: '/lighthouse/links', icon: Link2 },
     { name: 'Bot Engine', href: '/lighthouse/bot', icon: BarChart3 },
-    { name: 'Configure', href: '/lighthouse/settings', icon: Settings },
+    { name: 'Config', href: '/lighthouse/settings', icon: Settings },
   ]
 
   const handleLogout = async () => {
