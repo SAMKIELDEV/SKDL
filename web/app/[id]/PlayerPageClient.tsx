@@ -21,11 +21,19 @@ interface MediaRow {
 }
 
 function formatSize(bytes?: number): string {
-  if (!bytes) return ''
-  const gb = bytes / (1024 * 1024 * 1024)
-  if (gb >= 1) return gb.toFixed(2) + 'GB'
-  const mb = bytes / (1024 * 1024)
-  return mb.toFixed(1) + 'MB'
+  if (!bytes || bytes <= 0) return ''
+  
+  // If the number is small (e.g., < 10,000), it's likely already in MB from the source API
+  let b = bytes
+  if (b < 100000 && b > 0) {
+      b = b * 1024 * 1024
+  }
+
+  const gb = b / (1024 * 1024 * 1024)
+  if (gb >= 1) return gb.toFixed(2) + ' GB'
+  const mb = b / (1024 * 1024)
+  if (mb >= 1) return mb.toFixed(1) + ' MB'
+  return b + ' B'
 }
 
 export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; proxyUrl: string }) {
@@ -65,8 +73,11 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
         bits.push(`S${row.season.toString().padStart(2, '0')}E${row.episode.toString().padStart(2, '0')}`)
     }
     if (row.quality) bits.push(row.quality)
+    
+    // Add estimated size label
     const sizeStr = formatSize(row.size)
     if (sizeStr) bits.push(sizeStr)
+    
     return bits.join(' • ')
   }, [row.type, row.season, row.episode, row.quality, row.size])
 
