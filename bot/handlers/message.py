@@ -404,9 +404,27 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
         clear_pending_request(user_id)
 
 
+# Request deduplication to prevent double-processing (Telegram retries)
+_processed_requests = {}
+
 @router.message(F.text | F.photo)
 async def handle_message(message: Message) -> None:
     """Catch-all message handler — routes through Groq AI for both text and images."""
+    user_id = message.from_user.id
+    msg_id = f"{message.chat.id}:{message.message_id}"
+    
+    # 1. Deduplication Check
+    now = time.monotonic()
+    if msg_id in _processed_requests:
+        sent_time = _processed_requests[msg_id]
+        if now - sent_time < 30: # Ignore if same message ID within 30s
+            return
+    _processed_requests[msg_id] = now
+    
+    # Cleanup old entries periodically (could be more robust but this works)
+    if len(_processed_requests) > 1000:
+        _processed_requests.clear()
+
     start_time = time.monotonic()
     if not message.text and not message.photo and not message.caption:
         return
