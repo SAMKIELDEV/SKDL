@@ -53,13 +53,10 @@ async def _present_quality_options(message: Message, intent: dict, user_id: int)
     season = intent.get("season")
     episode = intent.get("episode")
 
-    status_msg = await message.answer(f"🔍 Locating **{title}**...", parse_mode="Markdown")
-
     data = await get_available_qualities(title, is_series, season, episode)
     qualities = data.get("qualities", [])
 
     if not qualities:
-        await status_msg.delete()
         return False
 
     set_pending_request(user_id, intent)
@@ -75,7 +72,7 @@ async def _present_quality_options(message: Message, intent: dict, user_id: int)
     if is_series and season is not None and episode is not None:
         display_title += f" S{season}E{episode}"
         
-    await status_msg.edit_text(
+    await message.answer(
         f"✅ Found **{display_title}**.\nChoose your quality 👇",
         reply_markup=builder.as_markup(),
         parse_mode="Markdown"
@@ -94,7 +91,9 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
         return
 
     quality = intent.get("quality") or "1080p"
-    status_msg = await message.answer(f"🔍 Searching for **{title}**...", parse_mode="Markdown")
+    
+    # We rely on the chat_reply already sent in handle_message to acknowledge the request.
+    # We only send a follow-up if we have the link or if it's taking a while.
 
     try:
         result = await get_movie(title, quality)
@@ -136,7 +135,7 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
             f"⏳ Link expires in 6 hours"
         )
 
-        await status_msg.edit_text(reply, parse_mode="Markdown")
+        await message.answer(reply, parse_mode="Markdown")
 
         # Attempt direct file delivery
         try:
@@ -168,7 +167,7 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
             duration_ms=elapsed_ms,
         )
 
-        await status_msg.edit_text(
+        await message.answer(
             f"❌ Couldn't find or process **{intent.get('title')}**. Try a different title or check the spelling.",
             parse_mode="Markdown",
         )
@@ -203,7 +202,7 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
                 builder.button(text="📂 Whole Season", callback_data="ep:bulk")
                 prompt = f"Which episode of **{info['title']} Season {season}** are we watching?"
             else:
-                prompt = f"I couldn't list episodes for **Season {season}** automatically. Just type the episode number (e.g., 6) and I'll find it! 👇"
+                prompt = f"I'm struggling to pull the list for **Season {season}** right now. Just drop the episode number (e.g., 6) and I'm on it! 👇"
             
             builder.adjust(4)
         else:
@@ -241,9 +240,6 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         return
 
     quality = intent.get("quality") or "1080p"
-    status_msg = await message.answer(
-        f"🔍 Searching for **{title}** S{season}E{episode}...", parse_mode="Markdown"
-    )
 
     try:
         result = await get_episode(title, int(season), int(episode), quality)
@@ -287,7 +283,7 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
             f"⏳ Link expires in 6 hours"
         )
 
-        await status_msg.edit_text(reply, parse_mode="Markdown")
+        await message.answer(reply, parse_mode="Markdown")
 
         # Attempt direct file delivery
         try:
@@ -318,7 +314,7 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
             duration_ms=elapsed_ms,
         )
 
-        await status_msg.edit_text(
+        await message.answer(
             f"❌ Couldn't find **{intent.get('title')}** S{season}E{episode}. Check the title and episode number.",
             parse_mode="Markdown",
         )
@@ -330,9 +326,9 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
     season = intent.get("season")
     quality = intent.get("quality") or "1080p"
 
-    status_msg = await message.answer(
+    await message.answer(
         f"🌪️ Gathering all of **{title}** Season {season} at {quality} quality...\n"
-        f"This might take about 15-20 seconds. 🍿",
+        f"I'll have the whole pack ready for you in a few seconds. 🍿",
         parse_mode="Markdown"
     )
 
@@ -341,7 +337,7 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
         episodes = await get_season_episodes(title, season, quality)
 
         if not episodes:
-            await status_msg.edit_text(f"❌ Couldn't find any episodes for Season {season} of **{title}**.")
+            await message.answer(f"❌ Couldn't find any episodes for Season {season} of **{title}**.")
             return
 
         media_ids = []
@@ -379,7 +375,7 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
             f"⏳ Link expires in 6 hours"
         )
 
-        await status_msg.edit_text(reply, parse_mode="Markdown")
+        await message.answer(reply, parse_mode="Markdown")
         add_message(user_id, "assistant", f"I just successfully generated a bulk download collection for {episodes[0]['title']} Season {season}.")
         
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
@@ -409,7 +405,7 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
             duration_ms=elapsed_ms,
         )
 
-        await status_msg.edit_text(
+        await message.answer(
             f"❌ Something went wrong while fetching the whole season. Try requesting a single episode or check back later.",
             parse_mode="Markdown",
         )
@@ -450,14 +446,14 @@ async def handle_message(message: Message) -> None:
     if message.photo:
         highest_res_photo: PhotoSize = message.photo[-1]
         try:
-            status_msg = await message.answer("👁️ Looking at your image...")
-            file_info = await message.bot.get_file(highest_res_photo.file_id)
-            downloaded_file = await message.bot.download_file(file_info.file_path)
-            image_base64 = base64.b64encode(downloaded_file.getvalue()).decode('utf-8')
-            await status_msg.delete()
+            from aiogram.utils.chat_action import ChatActionSender
+            async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
+                file_info = await message.bot.get_file(highest_res_photo.file_id)
+                downloaded_file = await message.bot.download_file(file_info.file_path)
+                image_base64 = base64.b64encode(downloaded_file.getvalue()).decode('utf-8')
         except Exception as e:
             logger.error("Failed to process image: %s", e)
-            await message.answer("⚠️ I couldn't understand that image, sorry!")
+            await message.answer("⚠️ I'm blanking on this image. Drop the title if you can!")
             return
 
     add_message(user_id, "user", "[Sent an Image]" if message.photo else user_text)
