@@ -44,6 +44,11 @@ If anyone asks for the website to watch movies, always use https://samkiel.onlin
 - If something isn't found, be real about it — don't be robotic with error messages
 - Match the user's language if they write in pidgin, French, Yoruba, or any other language. Respond in the same language while keeping your personality intact. If you're not confident in the language, default to English but acknowledge it casually: "I'd reply in that but I'd embarrass myself, English it is".
 
+## PERSISTENCE & INTENT RULES (MANDATORY)
+1. **TITLE PERSISTENCE**: If a title was established in any previous message in the conversation history, and the user's NEW message is a confirmation (e.g., "yes", "do it", "grab that", "okay", "send it", "🔥"), you MUST carry that `title` forward into the JSON.
+2. **COORDINATE PERSISTENCE**: If a title is established and the user then says "Season 2" or "Episode 5", you MUST carry the `title` and provide the `is_series: true`, `season: 2` or `episode: 5`.
+3. **NEVER DROP TITLES**: If the logic flow involves a movie or series, the `title` field must be populated. If it is null, the system fails to fetch.
+
 ## EXAMPLES OF HOW YOU SHOULD SOUND
 - User: "I want to watch Rush Hour"
   You: "oh you really want to laugh out your ribs huh 😭 Rush Hour it is, finding that for you rn"
@@ -67,62 +72,12 @@ If anyone asks for the website to watch movies, always use https://samkiel.onlin
 You help users find and download movies/shows via Telegram. When you understand what they want, you search for it and either deliver or ask a quick clarifying question if needed (title, year, quality). Keep clarifications natural — like a friend asking "wait which one, the original or the remake?" not "please specify: title, year, format."
 
 ## HARD RULES
-- Whenever you are "finding", "getting", or "fetching" a movie/series in your `chat_response`, YOU MUST populate the `title` field in the JSON. If `title` is null, the system cannot actually get the movie, and the user will be sad.
-- PERSISTENCE RULE: If a `title` was identified in a previous turn and the user says "okay", "yes", "grab it", "do it", or any confirmation, YOU MUST carry that `title` forward and set it in the JSON. This is CRITICAL for the download to actually trigger.
-- Example: 
-  Assistant: "I found Oppenheimer, should I grab it?" 
-  User: "okay"
-  Output: `{"title": "Oppenheimer", "chat_response": "Dope, grabbing it now!"}`
-- Never say "I am an AI" or "as a bot" or "I cannot" in a robotic way
-- Never use formal greetings like "Hello! How may I assist you today?"
-- Never write long paragraphs. Keep it tight.
-- If you don't understand something, just say so like a normal person: "wait what are you looking for exactly?"
-- Any conversational reply, roast, or hype goes entirely into the `chat_response` field of the JSON.
+- Whenever you are "finding", "getting", or "fetching" a movie/series in your `chat_response`, YOU MUST populate the `title` field in the JSON.
 - If the user asks for something that is not a movie or show (music, weather, general trivia, etc.), respond in character via `chat_response` only. Keep all other fields null/false/empty. Never fabricate a title for non-media requests.
+- Never say "I am an AI" or "as a bot" or "I cannot".
+- Always return exactly the JSON object. No markdown wrapping. No preamble.
 
-## INTENT PARSING RULES
-
-**Titles**
-- Resolve informal references ("that Leo movie with the ship" -> Titanic). Distinguish movies and series.
-
-**Context Retention**
-- If the user says "the last one", "that episode", "Season 3", or "Episode 5", refer to the most recently discussed movie/series in the conversation history.
-- PERSISTENCE RULE: If a `title` was identified in a previous turn and the user's new message is just a number ("Season 3") or episode reference ("Ep 5"), you MUST carry that `title` forward in your JSON output. Never leave `title` blank if it was already established in conversation.
-- Example: User says "Stranger Things" → then says "Season 2" → your output must still have `"title": "Stranger Things"`, not null.
-
-**Series Coordinates**
-- If only a season is provided ("Season 2"), set `is_series: true`, `season: 2`, and carry the previous `title`. Leave `episode: null` if not provided yet.
-- Episodes: "Breaking Bad S2E3" -> `is_series: true`, `season: 2`, `episode: 3`
-- Bulk Season: "Download season 1 of Stranger Things" -> `is_series: true`, `season: 1`, `episode: null`, `bulk: true`
-- Full Series: "Download the whole series" -> `is_series: true`, `season: null`, `episode: null`, `bulk: true`
-
-**Mood vs Genre**
-- Use `genre` for categories: horror, comedy, action, thriller, romance, sci-fi, animation, etc.
-- Use `mood` for feelings/vibes: "feel-good", "mind-bending", "cry-worthy", "hype", "chill", "dark"
-- A single request can populate both. "a dark comedy" -> `genre: "comedy"`, `mood: "dark"`
-
-**Quality**
-- Default to "1080p". Accept and normalize: 4K, HD, 1080, 720, 480p.
-
-**Clarification**
-- ONLY set `needs_clarification: true` if the user provides a specific title that has multiple distinct remakes or versions where the difference matters (e.g. "The Ring", "Scarface", "Oldboy").
-- When `needs_clarification` is true, populate `options` as an array of objects like this:
-[
-{"title": "Scarface (1932)", "year": 1932, "description": "the original gangster classic"},
-{"title": "Scarface (1983)", "year": 1983, "description": "Al Pacino, the one everyone quotes"}
-]
-- NEVER set `needs_clarification: true` for casual chat, greetings, mood requests, or questions about who you are.
-
-**Source Hints**
-- If the user mentions a platform ("the Netflix one", "the HBO version", "the one on Prime"), capture it in `source_hint`.
-- Example: "the Netflix anime" -> `source_hint: "Netflix"`
-
-**Chat / Greetings**
-- If the user is just saying "Hi", "Hello", or asking who you are, keep `title`, `genre`, `options`, `source_hint`, and `needs_clarification` as null/false/empty. Put your entire reply into `chat_response`.
-
-## RESPONSE FORMAT
-Always return exactly this JSON object. Never wrap it in markdown. Do not add any text outside the JSON. All your personality goes in the `chat_response` string.
-
+## RESPONSE FORMAT (JSON)
 {
   "title": "string | null",
   "is_series": false,
@@ -158,18 +113,19 @@ FALLBACK_INTENT: dict = {
 async def parse_intent(history: list[dict[str, str]], user_message: str, image_base64: str | None = None) -> dict:
     """
     Send conversation history + latest user message to Groq.
-    Returns a structured intent dict. Never raises — returns FALLBACK_INTENT on failure.
+    Returns a structured intent dict.
     """
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
-    for msg in history:
+    # Only include recent history (last 10 turns) to keep context manageable
+    for msg in history[-10:]:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
     if image_base64:
         messages.append({
             "role": "user",
             "content": [
-                {"type": "text", "text": user_message},
+                {"type": "text", "text": user_message or "What movie/show is in this image?"},
                 {
                     "type": "image_url",
                     "image_url": {
@@ -178,21 +134,9 @@ async def parse_intent(history: list[dict[str, str]], user_message: str, image_b
                 }
             ]
         })
-    if image_base64:
-        messages.append({
-            "role": "user",
-            "content": [
-                {"type": "text", "text": user_message},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{image_base64}"
-                    }
-                }
-            ]
-        })
-        model_name = "llama-3.2-11b-vision-preview" # Vision still uses 11b
+        model_name = "llama-3.2-11b-vision-preview" 
     else:
+        # Standard text-only fallback to 70B
         messages.append({"role": "user", "content": user_message})
         model_name = "llama-3.3-70b-versatile"
 
@@ -201,7 +145,7 @@ async def parse_intent(history: list[dict[str, str]], user_message: str, image_b
             model=model_name,
             messages=messages,
             temperature=0.1,
-            max_tokens=500,
+            max_tokens=600,
             response_format={"type": "json_object"},
         )
 
@@ -225,7 +169,6 @@ async def parse_intent(history: list[dict[str, str]], user_message: str, image_b
         if needs_clarification and parsed.get("options"):
             intent_category = "clarify"
             options = parsed.get("options", [])
-            # Format detailed options: "Title (Year) - Description"
             opts_list = []
             for opt in options:
                 t = opt.get("title", "Unknown")
@@ -240,16 +183,6 @@ async def parse_intent(history: list[dict[str, str]], user_message: str, image_b
 
         if not title and not needs_clarification and "help" in (parsed.get("raw_intent") or "").lower():
             intent_category = "help"
-
-        # SELF-CORRECTION: If the chat_response says you are getting/finding it, 
-        # but title is missing, try to extract title from chat_response or previous history.
-        # This is a safety net for the 8b model, but still good for 70b.
-        if intent_category == "chat" and any(word in chat_response.lower() for word in ["finding", "getting", "reaching", "fetching"]):
-            # If we were discussing a title previously, recover it.
-            for msg in reversed(history):
-                if msg["role"] == "assistant" and "finding" in msg["content"].lower():
-                    # This is complex, but the prompt should handle this better now.
-                    pass
 
         return {
             "intent": intent_category,

@@ -36,8 +36,9 @@ async def cmd_sub_search(message: Message, query: str):
             file_id = best["attributes"]["files"][0]["file_id"]
             download_res = await download_subtitle(file_id)
             if download_res and download_res.get("link"):
+                file_name = f"{query} - SKDL(samkiel.online).srt"
                 await message.answer_document(
-                    URLInputFile(download_res["link"], filename=download_res.get("file_name", "sub.srt")),
+                    URLInputFile(download_res["link"], filename=file_name),
                     caption=f"📥 Subtitles for **{query}**"
                 )
                 await status.delete()

@@ -435,7 +435,14 @@ async def handle_message(message: Message) -> None:
     history = get_history(user_id)
     intent = await parse_intent(history, user_text, image_base64=image_base64)
 
-    # 1. Always deliver the AI's personality response if they gave one
+    # 1. Check rate limits BEFORE delivering chat_reply or starting search
+    if intent["intent"] in ["download_movie", "download_series"]:
+        username = (message.from_user.username or "").lower()
+        if username not in ["samkiell", "samkiel488"] and not await check_rate_limit(user_id):
+            await message.answer("⚠️ whoa there big watcher, you've hit your daily limit of 10 requests. touch some grass and try again tomorrow!")
+            return
+
+    # 2. Always deliver the AI's personality response if they gave one
     chat_reply = intent.get("chat_response")
     if chat_reply:
         await message.answer(chat_reply)
@@ -443,17 +450,9 @@ async def handle_message(message: Message) -> None:
 
     match intent["intent"]:
         case "download_movie":
-            username = (message.from_user.username or "").lower()
-            if username not in ["samkiell", "samkiel488"] and not await check_rate_limit(user_id):
-                await message.answer("⚠️ whoa there big watcher, you've hit your daily limit of 10 movies. touch some grass and try again tomorrow!")
-                return
             await _handle_download_movie(message, intent, user_id, start_time)
 
         case "download_series":
-            username = (message.from_user.username or "").lower()
-            if username not in ["samkiell", "samkiel488"] and not await check_rate_limit(user_id):
-                await message.answer("⚠️ whoa there binge-watcher, you've hit your daily limit of 10 episodes. touch some grass and try again tomorrow!")
-                return
             await _handle_download_series(message, intent, user_id, start_time)
 
         case "clarify":
