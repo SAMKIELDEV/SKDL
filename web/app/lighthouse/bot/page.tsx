@@ -59,16 +59,26 @@ export default function BotActivityPage() {
   const fetchData = async (currentPage = page, currentSearch = debouncedSearch) => {
     try {
       setLoading(true)
+      console.log(`[BOT_LOGS] Fetching: page=${currentPage}, search="${currentSearch}"`)
       const res = await fetch(`/api/lighthouse/stats?page=${currentPage}&search=${encodeURIComponent(currentSearch)}`)
+      
       if (res.status === 401) {
         window.location.href = '/lighthouse/login'
         return
       }
+      
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.details || err.error || 'Server error')
+      }
+      
       const result = await res.json()
       setData(result)
+      console.log(`[BOT_LOGS] Success: received ${result.recent?.length || 0} items`)
       setLastUpdated(new Date())
-    } catch (error) {
-      console.error('Failed to fetch bot analytics:', error)
+    } catch (error: any) {
+      console.error('Failed to fetch bot analytics:', error.message)
+      // We could set an error state here too
     } finally {
       setLoading(false)
     }

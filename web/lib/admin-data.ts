@@ -186,15 +186,22 @@ export async function getBotAnalytics(page = 1, search = '') {
     
     let queryBuilder = supabase
       .from('bot_logs')
-      .select('*')
+      .select('*', { count: 'exact' })
       
-    if (search) {
-      queryBuilder = queryBuilder.or(`username.ilike.%${search}%,display_name.ilike.%${search}%,result_title.ilike.%${search}%,query.ilike.%${search}%`)
+    if (search && search.trim() !== '') {
+      const s = search.trim()
+      // Use quotes for the search pattern to handle spaces/commas correctly in Postgrest OR filter
+      const filter = `username.ilike."%${s}%",display_name.ilike."%${s}%",result_title.ilike."%${s}%",query.ilike."%${s}%"`
+      queryBuilder = queryBuilder.or(filter)
     }
 
-    const { data: recent } = await queryBuilder
+    const { data: recent, error: recentError, count: totalRecent } = await queryBuilder
       .order('created_at', { ascending: false })
       .range(offset, offset + pageSize - 1)
+
+    if (recentError) {
+      console.error('Supabase Error (bot_logs recent):', recentError.message || recentError)
+    }
 
     return {
       overview: {

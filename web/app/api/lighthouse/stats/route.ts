@@ -17,6 +17,9 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get('page') || '1')
     const search = searchParams.get('search') || ''
     
+    // Diagnostic logging
+    console.log(`[Lighthouse API] Fetching Stats: page=${page}, search="${search}"`)
+
     const dashboardStats = await getDashboardStats()
     const botStats = await getBotAnalytics(page, search)
     
@@ -26,6 +29,6 @@ export async function GET(req: Request) {
     })
   } catch (error) {
     console.error('API Error /api/lighthouse/stats:', error)
-    return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch', details: error instanceof Error ? error.message : 'Unknown' }, { status: 500 })
   }
 }
