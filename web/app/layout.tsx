@@ -184,7 +184,11 @@ export default function RootLayout({
               </Link>
               <nav className="flex gap-6 items-center text-sm font-mono text-zinc-400">
                 <Link href="/discover" className="hover:text-white transition-colors">DISCOVER</Link>
-                <Link href="/sub" className="hover:text-white transition-colors">SUBTITLES</Link>
+                <Link href="/sub" className="hover:text-white transition-colors">
+                  <span className="md:hidden">SUB</span>
+                  <span className="hidden md:inline">SUBTITLES</span>
+                </Link>
+                <Link href="/feedback" className="hover:text-white transition-colors">FEEDBACK</Link>
               </nav>
             </div>
           </header>
