@@ -72,6 +72,20 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
       if (data.type === 'srt' || type === 'srt') {
          const downloadName = `${brandedFilename}.srt`
          const proxyUrl = `/api/proxy?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(downloadName)}&dl=1`
+         
+         // Track SRT Download
+         fetch('/api/track/download', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({
+             media_id: id,
+             title: data.title,
+             media_type: 'subtitle',
+             format: 'srt'
+           }),
+           keepalive: true
+         }).catch(() => {})
+
          window.location.href = proxyUrl
          setLoading(false)
          return
@@ -88,6 +102,18 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
             // This prevents browser memory limits and Vercel fetch timeouts.
             const muxUrl = `/api/mux?videoUrl=${encodeURIComponent(data.url)}&subtitleUrl=${encodeURIComponent(subtitleUrl)}&filename=${encodeURIComponent(brandedFilename)}`
             
+            fetch('/api/track/download', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                media_id: id,
+                title: data.title,
+                media_type: data.type || 'series',
+                format: 'mkv'
+              }),
+              keepalive: true
+            }).catch(() => {})
+
             window.location.href = muxUrl
         } catch (err) {
             console.error('MKV Muxing failed:', err)
@@ -104,6 +130,20 @@ export default function DownloadPage({ params }: { params: Promise<{ id: string 
 
       const downloadName = `${brandedFilename}.mp4`
       const proxyUrl = `/api/proxy?url=${encodeURIComponent(data.url)}&filename=${encodeURIComponent(downloadName)}&dl=1`
+      
+      // Track Download Event (Fire & Forget)
+      fetch('/api/track/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          media_id: id,
+          title: data.title,
+          media_type: data.type || (type === 'srt' ? 'subtitle' : 'movie'), // fallback
+          format: type // mp4, mkv, or srt
+        }),
+        keepalive: true
+      }).catch(() => {})
+
       window.location.href = proxyUrl
       setLoading(false)
     } catch (err: any) {

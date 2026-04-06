@@ -36,6 +36,7 @@ export default function LighthouseLayout({
     { name: 'Dashboard', href: '/lighthouse', icon: LayoutDashboard },
     { name: 'Links Management', href: '/lighthouse/links', icon: Link2 },
     { name: 'Bot Engine', href: '/lighthouse/bot', icon: BarChart3 },
+    { name: 'Analytics', href: '/lighthouse/analytics', icon: Zap },
     { name: 'Feedback', href: '/lighthouse/feedback', icon: MessageSquare },
     { name: 'Config', href: '/lighthouse/settings', icon: Settings },
   ]

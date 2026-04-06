@@ -153,6 +153,7 @@ const jsonLd = {
 import ConditionalHeader from './components/ConditionalHeader'
 import ConditionalFooter from './components/ConditionalFooter'
 import GlobalNotice from './components/GlobalNotice'
+import PageTracker from '../components/PageTracker'
 
 export default function RootLayout({
   children,
@@ -164,6 +165,7 @@ export default function RootLayout({
       <body
         className={`antialiased bg-black text-white ${inter.variable} ${spaceGrotesk.variable} ${jbMono.variable} flex flex-col min-h-screen`}
       >
+        <PageTracker />
         {/* JSON-LD injected into <head> at the edge — zero client JS cost */}
         <Script
           id="json-ld"
