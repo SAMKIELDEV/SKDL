@@ -26,9 +26,27 @@ const API_HOST = "h5-api.aoneroom.com"
 const REFERER_BASE = "https://h5.aoneroom.com"
 
 const DEFAULT_HEADERS = {
-  'Referer': `${REFERER_BASE}/`,
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'application/json',
+  'Referer': 'https://fmoviesunblocked.net/',
+  'Origin': 'https://h5.aoneroom.com',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+}
+
+async function fetchWithTimeout(url: string, options: any = {}, timeout = 10000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (e) {
+    clearTimeout(id);
+    throw e;
+  }
 }
 
 export async function searchMovieBox(
@@ -39,7 +57,7 @@ export async function searchMovieBox(
   const subjectType = type === 'movie' ? 1 : 2
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       method: 'POST',
       headers: { ...DEFAULT_HEADERS, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -77,7 +95,10 @@ export async function getMovieBoxDetails(
   }
   
   try {
-    const response = await fetch(url, { headers: DEFAULT_HEADERS, cache: 'no-store' })
+    let response = await fetchWithTimeout(url, { headers: DEFAULT_HEADERS, cache: 'no-store' })
+    if (!response.ok) {
+        response = await fetchWithTimeout(url, { headers: DEFAULT_HEADERS, cache: 'no-store' })
+    }
     if (!response.ok) {
       console.warn(`MovieBox Detail Fetch Warning: ${response.status} ${response.statusText} for ID ${subjectId}`)
       return { downloads: [], captions: [] }

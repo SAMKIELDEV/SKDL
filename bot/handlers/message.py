@@ -201,9 +201,11 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
             
             if episodes:
                 builder.button(text="📂 Whole Season", callback_data="ep:bulk")
+                prompt = f"Which episode of **{info['title']} Season {season}** are we watching?"
+            else:
+                prompt = f"I couldn't list episodes for **Season {season}** automatically. Just type the episode number (e.g., 6) and I'll find it! 👇"
             
             builder.adjust(4)
-            prompt = f"Which episode of **{info['title']}** are we watching?"
         else:
             # Season selection
             for i in range(1, 10): # Most shows have < 10 seasons
