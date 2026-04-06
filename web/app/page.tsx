@@ -84,12 +84,6 @@ export default function LandingPage() {
     }
   }, [])
 
-  const tickerItems = [
-    "UNLIMITED MOVIES", "•", "HD SERIES", "•", "FAST DOWNLOADS", "•", "PREMIUM EXPERIENCE", "•",
-  ]
-
-  // Duplicate for seamless infinite scroll
-  const allTickerItems = [...tickerItems, ...tickerItems, ...tickerItems, ...tickerItems]
 
   return (
     <div className={styles.page}>
@@ -131,15 +125,6 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <div className={styles.tickerWrap}>
-        <div className={styles.ticker}>
-          {allTickerItems.map((item, i) => (
-            <span key={i} className={item === "•" ? styles.tickerIcon : styles.tickerItem}>
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
 
       <section className={styles.steps}>
         <div className={`${styles.stepsHeader} ${styles.reveal}`}>
