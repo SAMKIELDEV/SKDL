@@ -196,17 +196,12 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
             builder.button(text="📂 Whole Season", callback_data="ep:bulk")
             builder.adjust(4, 1)
         
-        # Use AI's chat response for natural tone, fallback if it's missing
-        chat_reply = intent.get("chat_response")
-        if not chat_reply or "example:" in chat_reply.lower():
-            if season is None:
-                chat_reply = f"I found **{title}**! Which season are we aiming for?"
-            else:
-                chat_reply = f"Dope, **{title}** Season {season}. Which episode are we diving into?"
+        # If we already sent the AI response in handle_message, we just send the prompt + keyboard here
+        prompt = f"Which season of **{title}**?" if season is None else f"Which episode of **{title}** S{season}?"
 
         set_pending_request(user_id, intent)
         await message.answer(
-            chat_reply,
+            prompt,
             reply_markup=builder.as_markup() if (season is not None and episode is None) else None,
             parse_mode="Markdown",
         )
