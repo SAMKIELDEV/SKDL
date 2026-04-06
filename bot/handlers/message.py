@@ -80,7 +80,7 @@ async def _present_quality_options(message: Message, intent: dict, user_id: int)
     return True
 
 
-async def _handle_download_movie(message: Message, intent: dict, user_id: int, start_time: float) -> None:
+async def _handle_download_movie(message: Message, intent: dict, user_id: int, start_time: float, user_obj: any = None) -> None:
     """Process a download_movie intent."""
     title = intent.get("title")
     if not title:
@@ -92,8 +92,8 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
 
     quality = intent.get("quality") or "1080p"
     
-    # We rely on the chat_reply already sent in handle_message to acknowledge the request.
-    # We only send a follow-up if we have the link or if it's taking a while.
+    # Use user_obj fallback to message.from_user
+    user = user_obj or message.from_user
 
     try:
         result = await get_movie(title, quality)
@@ -119,8 +119,8 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         log_event(
             user_id=user_id,
-            username=message.from_user.username,
-            display_name=message.from_user.full_name,
+            username=user.username,
+            display_name=user.full_name,
             action="download_movie",
             query=intent.get("title"),
             result_title=result["title"],
@@ -158,8 +158,8 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
         
         log_event(
             user_id=user_id,
-            username=message.from_user.username,
-            display_name=message.from_user.full_name,
+            username=user.username,
+            display_name=user.full_name,
             action="not_found" if is_not_found else "error",
             query=intent.get("title"),
             result_found=False,
@@ -173,7 +173,7 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
         )
 
 
-async def _handle_download_series(message: Message, intent: dict, user_id: int, start_time: float) -> None:
+async def _handle_download_series(message: Message, intent: dict, user_id: int, start_time: float, user_obj: any = None) -> None:
     """Process a download_series intent."""
     title = intent.get("title")
     season = intent.get("season")
@@ -184,7 +184,7 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         return
 
     if intent.get("bulk") and season is not None:
-        await _handle_bulk_series(message, intent, user_id, start_time)
+        await _handle_bulk_series(message, intent, user_id, start_time, user_obj)
         return
 
     if season is None or episode is None:
@@ -240,6 +240,7 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         return
 
     quality = intent.get("quality") or "1080p"
+    user = user_obj or message.from_user
 
     try:
         result = await get_episode(title, int(season), int(episode), quality)
@@ -267,8 +268,8 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         log_event(
             user_id=user_id,
-            username=message.from_user.username,
-            display_name=message.from_user.full_name,
+            username=user.username,
+            display_name=user.full_name,
             action="download_series",
             query=f"{intent.get('title')} S{season}E{episode}",
             result_title=result["title"],
@@ -305,8 +306,8 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         
         log_event(
             user_id=user_id,
-            username=message.from_user.username,
-            display_name=message.from_user.full_name,
+            username=user.username,
+            display_name=user.full_name,
             action="not_found" if is_not_found else "error",
             query=f"{intent.get('title')} S{season}E{episode}",
             result_found=False,
@@ -320,11 +321,12 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         )
 
 
-async def _handle_bulk_series(message: Message, intent: dict, user_id: int, start_time: float) -> None:
+async def _handle_bulk_series(message: Message, intent: dict, user_id: int, start_time: float, user_obj: any = None) -> None:
     """Process a bulk series download (entire season)."""
     title = intent.get("title")
     season = intent.get("season")
     quality = intent.get("quality") or "1080p"
+    user = user_obj or message.from_user
 
     await message.answer(
         f"🌪️ Gathering all of **{title}** Season {season} at {quality} quality...\n"
@@ -381,8 +383,8 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         log_event(
             user_id=user_id,
-            username=message.from_user.username,
-            display_name=message.from_user.full_name,
+            username=user.username,
+            display_name=user.full_name,
             action="download_series",
             query=f"{intent.get('title')} Season {season} (Bulk)",
             result_title=episodes[0]["title"],
@@ -396,8 +398,8 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
         
         log_event(
             user_id=user_id,
-            username=message.from_user.username,
-            display_name=message.from_user.full_name,
+            username=user.username,
+            display_name=user.full_name,
             action="error",
             query=f"{intent.get('title')} Season {season} (Bulk)",
             result_found=False,
@@ -499,7 +501,7 @@ async def on_season_selected(query: CallbackQuery) -> None:
     await query.message.delete()
     intent["season"] = val
     clear_pending_request(user_id)
-    await _handle_download_series(query.message, intent, user_id, time.monotonic())
+    await _handle_download_series(query.message, intent, user_id, time.monotonic(), user_obj=query.from_user)
 
 
 @router.callback_query(F.data.startswith("q:"))
@@ -516,9 +518,9 @@ async def on_quality_selected(query: CallbackQuery) -> None:
     intent["_quality_selected"] = True
     clear_pending_request(user_id)
     if intent["intent"] == "download_movie":
-        await _handle_download_movie(query.message, intent, user_id, time.monotonic())
+        await _handle_download_movie(query.message, intent, user_id, time.monotonic(), user_obj=query.from_user)
     else:
-        await _handle_download_series(query.message, intent, user_id, time.monotonic())
+        await _handle_download_series(query.message, intent, user_id, time.monotonic(), user_obj=query.from_user)
 
 
 @router.callback_query(F.data.startswith("ep:"))
@@ -536,4 +538,4 @@ async def on_episode_selected(query: CallbackQuery) -> None:
     else:
         intent["episode"] = int(val)
     clear_pending_request(user_id)
-    await _handle_download_series(query.message, intent, user_id, time.monotonic())
+    await _handle_download_series(query.message, intent, user_id, time.monotonic(), user_obj=query.from_user)

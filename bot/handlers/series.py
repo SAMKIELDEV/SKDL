@@ -28,6 +28,9 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from services.supabase import save_media
 from services.session import clear_session
 
+import time
+from services.logger import log_event
+
 logger = logging.getLogger(__name__)
 router = Router()
 
@@ -37,6 +40,7 @@ class SeriesStates(StatesGroup):
 
 async def process_series_delivery(message: Message, title: str, season: int, episode: int):
     """Helper to handle the actual search and delivery logic."""
+    start_time = time.monotonic()
     status_msg = await message.answer(
         f"🔍 Searching for **{title}** S{season}E{episode}...", 
         parse_mode="Markdown",
@@ -62,6 +66,18 @@ async def process_series_delivery(message: Message, title: str, season: int, epi
             imdb_id=result.get("imdb_id"),
             poster_url=result.get("poster_url"),
             description=result.get("description"),
+        )
+
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        log_event(
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="download_series",
+            query=f"{title} S{season}E{episode}",
+            result_title=result["title"],
+            result_found=True,
+            duration_ms=elapsed_ms,
         )
 
         reply = (
@@ -91,6 +107,21 @@ async def process_series_delivery(message: Message, title: str, season: int, epi
 
     except Exception as exc:
         logger.error("Series search failed for '%s' S%dE%d: %s", title, season, episode, exc)
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        
+        is_not_found = "No results found" in str(exc) or "Could not resolve" in str(exc)
+        
+        log_event(
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="not_found" if is_not_found else "error",
+            query=f"{title} S{season}E{episode}",
+            result_found=False,
+            error_message=None if is_not_found else str(exc),
+            duration_ms=elapsed_ms,
+        )
+
         await status_msg.edit_text(
             f"❌ Couldn't find **{title}** S{season}E{episode}. Check the details and try again.",
             parse_mode="Markdown",

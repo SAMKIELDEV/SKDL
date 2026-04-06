@@ -101,18 +101,35 @@ export default function LandingPage() {
       <section className={styles.hero}>
         <div className={styles.heroGlow}></div>
         <div className={`${styles.heroContent} ${styles.reveal}`}>
-          <span className={styles.heroLabel}>AI-POWERED CINEMATIC DISCOVERY // SKDL</span>
+          <span className={styles.heroLabel}>AI-POWERED MEDIA DISCOVERY // SKDL</span>
           <h1 className={styles.heroTitle}>Netflix and Chill<br />With SKDL</h1>
     
           <p className={styles.heroDesc}>
-            Experience lightning-fast movie and series downloads directly from Telegram. 
-            AI-Powered. Instant. Pure entertainment.
+            The ultimate bridge between Telegram and High-Quality streaming. 
+            Find any movie or series with AI, and watch it here instantly.
           </p>
-          <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className={`${styles.btn} ${styles.btnAccent}`}>
-            Watch Latest Now!
+          <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className={styles.btn}>
+            GET STARTED ON TELEGRAM
           </a>
         </div>
       </section>
+
+      <div className={styles.tickerWrap}>
+        <div className={styles.ticker}>
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center">
+              <span className={styles.tickerItem}>UNLIMITED MOVIES</span>
+              <div className={styles.tickerDot}></div>
+              <span className={styles.tickerItem}>HD SERIES</span>
+              <div className={styles.tickerDot}></div>
+              <span className={styles.tickerItem}>FAST DOWNLOADS</span>
+              <div className={styles.tickerDot}></div>
+              <span className={styles.tickerItem}>PREMIUM EXPERIENCE</span>
+              <div className={styles.tickerDot}></div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <div className={styles.tickerWrap}>
         <div className={styles.ticker}>
@@ -124,38 +141,45 @@ export default function LandingPage() {
         </div>
       </div>
 
-      <section className={styles.features}>
-        <div className={styles.featuresGrid}>
-          <div className={`${styles.featureCard} ${styles.reveal}`}>
-            <div className={styles.featureIcon}>01</div>
-            <h3 className={styles.featureTitle}>Chat with AI</h3>
-            <p className={styles.featureDesc}>
-              Just type naturally. Send "Hey chat, find me the new Avatar movie in 4K" and our intelligent bot instantly searches, resolves, and delivers the exact file you want.
+      <section className={styles.steps}>
+        <div className={`${styles.stepsHeader} ${styles.reveal}`}>
+          <h2 className={styles.stepsTitle}>How it works</h2>
+          <p className={styles.stepsDesc}>Three simple steps to cinematic bliss. No ads, no fluff, just pure entertainment.</p>
+        </div>
+
+        <div className={styles.stepsGrid}>
+          <div className={`${styles.stepCard} ${styles.reveal}`}>
+            <div className={styles.stepNumber}>01</div>
+            <h3 className={styles.stepTitle}>Request</h3>
+            <p className={styles.stepDesc}>
+              Head over to our Telegram bot <strong>@SK_DLBOT</strong> and just ask for what you want to watch. Our AI understands natural language.
             </p>
           </div>
-          <div className={`${styles.featureCard} ${styles.reveal}`}>
-            <div className={styles.featureIcon}>02</div>
-            <h3 className={styles.featureTitle}>HD Quality</h3>
-            <p className={styles.featureDesc}>
-              Choose from multiple resolutions presented right in the chat. Tell the AI what device you're on, and pull direct 720p, 1080p, or pristine 4K original files.
+          
+          <div className={`${styles.stepCard} ${styles.reveal}`}>
+            <div className={styles.stepNumber}>02</div>
+            <h3 className={styles.stepTitle}>Process</h3>
+            <p className={styles.stepDesc}>
+              The bot instantly searches the highest quality sources, resolves the best links, and sends you a private access link.
             </p>
           </div>
-          <div className={`${styles.featureCard} ${styles.reveal}`}>
-            <div className={styles.featureIcon}>03</div>
-            <h3 className={styles.featureTitle}>Full Setup</h3>
-            <p className={styles.featureDesc}>
-              Full MKV support with integrated subtitles. Our download engine automatically processes accurate subs, delivering a single high-quality file ready for any device.
+
+          <div className={`${styles.stepCard} ${styles.reveal}`}>
+            <div className={styles.stepNumber}>03</div>
+            <h3 className={styles.stepTitle}>Stream</h3>
+            <p className={styles.stepDesc}>
+              Follow the link back to <strong>SKDL Web</strong> to stream in 4K or download for offline viewing. Pure, seamless experience.
             </p>
           </div>
         </div>
       </section>
 
-      <section className={styles.hero} style={{ height: '60vh' }}>
+      <section className={styles.hero} style={{ height: '60vh', minHeight: 'unset' }}>
         <div className={`${styles.heroContent} ${styles.reveal}`}>
-          <h2 className={styles.heroTitle} style={{ fontSize: 'clamp(3rem, 8vw, 6rem)' }}>Ready to Watch?</h2>
-          <p className={styles.heroDesc}>Join thousands of users who have upgraded their entertainment setup.</p>
+          <h2 className={styles.heroTitle} style={{ fontSize: 'clamp(2.5rem, 8vw, 6rem)' }}>Ready to Watch?</h2>
+          <p className={styles.heroDesc}>Stop searching. Start watching. The future of media discovery is here.</p>
           <a href="https://t.me/SK_DLBOT" target="_blank" rel="noopener noreferrer" className={styles.btn}>
-            OPEN IN TELEGRAM
+            OPEN TELEGRAM
           </a>
         </div>
       </section>

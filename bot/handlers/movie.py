@@ -16,6 +16,9 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from services.supabase import save_media
 from services.session import clear_session
 
+import time
+from services.logger import log_event
+
 logger = logging.getLogger(__name__)
 router = Router()
 
@@ -23,6 +26,7 @@ router = Router()
 @router.message(Command("movie"))
 async def cmd_movie(message: Message) -> None:
     """Handle /movie <title> — direct movie search and download."""
+    start_time = time.monotonic()
     args = message.text.strip().split(maxsplit=1)
 
     if len(args) < 2 or not args[1].strip():
@@ -55,6 +59,18 @@ async def cmd_movie(message: Message) -> None:
             description=result.get("description"),
         )
 
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        log_event(
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="download_movie",
+            query=title,
+            result_title=result["title"],
+            result_found=True,
+            duration_ms=elapsed_ms,
+        )
+
         reply = (
             f"🎬 **{result['title']} ({result['year']})**\n"
             f"Quality: {result['quality']}\n\n"
@@ -83,6 +99,21 @@ async def cmd_movie(message: Message) -> None:
 
     except Exception as exc:
         logger.error("/movie command failed for '%s': %s", title, exc)
+        elapsed_ms = int((time.monotonic() - start_time) * 1000)
+        
+        is_not_found = "No results found" in str(exc) or "Could not resolve" in str(exc)
+        
+        log_event(
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            display_name=message.from_user.full_name,
+            action="not_found" if is_not_found else "error",
+            query=title,
+            result_found=False,
+            error_message=None if is_not_found else str(exc),
+            duration_ms=elapsed_ms,
+        )
+
         await status_msg.edit_text(
             f"❌ Couldn't find **{title}**. Check the spelling and try again.",
             parse_mode="Markdown",
