@@ -94,7 +94,7 @@ export default async function AnalyticsPage() {
           <div key={stat.label} className="bg-zinc-950/50 border border-white/5 p-6 rounded-2xl space-y-4 hover:border-white/10 transition-colors">
             <stat.icon className={`w-5 h-5 ${stat.color}`} />
             <div className="space-y-1">
-              <p className="text-2xl font-mono font-bold text-white tracking-tighter">{stat.value.toLocaleString()}</p>
+              <p className="text-2xl font-mono font-bold text-white tracking-tighter">{(stat.value || 0).toLocaleString()}</p>
               <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 font-bold">{stat.label}</p>
             </div>
           </div>
@@ -129,7 +129,7 @@ export default async function AnalyticsPage() {
                 {topPages.data?.map((page: any) => (
                   <tr key={page.path} className="hover:bg-white/[0.01]">
                     <td className="px-6 py-4 text-zinc-400 truncate max-w-[200px]">{page.path}</td>
-                    <td className="px-6 py-4 text-right text-white font-bold">{page.visits.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right text-white font-bold">{(page.visits || 0).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -161,7 +161,7 @@ export default async function AnalyticsPage() {
                         {dl.media_type}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right text-white font-bold">{dl.download_count.toLocaleString()}</td>
+                    <td className="px-6 py-4 text-right text-white font-bold">{(dl.download_count || 0).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -182,7 +182,7 @@ export default async function AnalyticsPage() {
               {Object.entries(formatBreakdown as Record<string, number>).map(([fmt, count], idx) => {
                 const colors = ['bg-[#e8ff47]', 'bg-zinc-400', 'bg-zinc-700']
                 const total = Object.values(formatBreakdown as Record<string, number>).reduce((a, b) => a + b, 0)
-                const pct = (count / total) * 100
+                const pct = total > 0 ? (count / total) * 100 : 0
                 return (
                   <div 
                     key={fmt} 
@@ -216,7 +216,7 @@ export default async function AnalyticsPage() {
               {Object.entries(typeBreakdown as Record<string, number>).map(([type, count], idx) => {
                 const colors = ['bg-blue-500', 'bg-purple-500', 'bg-zinc-700']
                 const total = Object.values(typeBreakdown as Record<string, number>).reduce((a, b) => a + b, 0)
-                const pct = (count / total) * 100
+                const pct = total > 0 ? (count / total) * 100 : 0
                 return (
                   <div 
                     key={type} 
