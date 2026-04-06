@@ -298,5 +298,29 @@ async def get_subtitles(subject_id: str, is_series: bool, season: int = 0, episo
             }
     except Exception as exc:
         logger.error("Failed to extract MovieBox subtitles for %s: %s", subject_id, exc)
-        
     return None
+
+async def get_media_info(title: str, is_series: bool) -> dict:
+    """Fetch basic metadata (poster, year, genre, description) for a given title."""
+    session = Session()
+    try:
+        from moviebox_api.v1.constants import SubjectType
+        subject_type = SubjectType.TV_SERIES if is_series else SubjectType.MOVIES
+        search = Search(session, query=title, subject_type=subject_type, per_page=1)
+        results = await search.get_content_model()
+        if not results.items:
+            return {"title": title, "year": "Unknown"}
+        
+        target = results.first_item
+        # Return dict with common metadata
+        return {
+            "title": target.title,
+            "year": target.releaseDate.year,
+            "poster_url": target.cover.url if hasattr(target, "cover") else None,
+            "description": getattr(target, "description", ""),
+            "genre": getattr(target, "tags", ""), # MovieBox often calls genres tags
+            "subject_id": target.subjectId
+        }
+    except Exception as exc:
+        logger.error("Failed to fetch media info for %s: %s", title, exc)
+        return {"title": title, "year": "Unknown"}

@@ -10,7 +10,7 @@ import logging
 import base64
 import time
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, PhotoSize
+from aiogram.types import Message, CallbackQuery, PhotoSize, URLInputFile
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from services.logger import log_event
 
@@ -19,7 +19,7 @@ from services.session import (
     add_message, get_history, clear_session,
     set_pending_request, get_pending_request, clear_pending_request
 )
-from services.moviebox import get_movie, get_episode, get_available_qualities
+from services.moviebox import get_movie, get_episode, get_available_qualities, get_media_info, get_season_episodes
 from services.link import generate_id, build_url
 from services.supabase import save_media, save_collection, check_rate_limit
 
@@ -122,7 +122,7 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
             result_title=result["title"],
             result_found=True,
             duration_ms=elapsed_ms,
-        )
+            )
 
         reply = (
             f"🎬 **{result['title']} ({result['year']})**\n"
@@ -135,7 +135,6 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
 
         # Attempt direct file delivery
         try:
-            from aiogram.types import URLInputFile
             file_name = f"{result['title']} ({result['year']}) {result['quality']} - SKDL(samkiel.online).mp4"
             await message.answer_document(
                 URLInputFile(result["cdn_url"], filename=file_name),
@@ -143,7 +142,6 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
             )
         except Exception as e:
             logger.warning("Direct file delivery failed for '%s': %s", result['title'], e)
-            # We don't notify the user because the link is the primary delivery method
 
         add_message(user_id, "assistant", f"I just successfully generated a download link and sent the movie: {result['title']} ({result['year']}) in {result['quality']}.")
         clear_pending_request(user_id)
@@ -152,7 +150,6 @@ async def _handle_download_movie(message: Message, intent: dict, user_id: int, s
         logger.error("Movie download failed: %s", exc)
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
         
-        # Check if it was a "not found" vs a technical error
         is_not_found = "No results found" in str(exc) or "Could not resolve" in str(exc)
         
         log_event(
@@ -187,24 +184,50 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
         return
 
     if season is None or episode is None:
-        # Build buttons for episodes if only episode is missing
+        # Fetch show info to make it dynamic
+        info = await get_media_info(title, is_series=True)
         builder = InlineKeyboardBuilder()
-        if season is not None and episode is None:
-            for i in range(1, 9):
-                builder.button(text=f"Ep {i}", callback_data=f"ep:{i}")
-            # Add 'Whole Season' as the final button
-            builder.button(text="📂 Whole Season", callback_data="ep:bulk")
-            builder.adjust(4, 1)
-        
-        # If we already sent the AI response in handle_message, we just send the prompt + keyboard here
-        prompt = f"Which season of **{title}**?" if season is None else f"Which episode of **{title}** S{season}?"
 
-        set_pending_request(user_id, intent)
-        await message.answer(
-            prompt,
-            reply_markup=builder.as_markup() if (season is not None and episode is None) else None,
-            parse_mode="Markdown",
+        if season is not None and episode is None:
+            # Dynamic episode probing
+            episodes = await get_season_episodes(title, season, "360p")
+            for ep in episodes[:24]:
+                builder.button(text=f"Ep {ep['episode']}", callback_data=f"ep:{ep['episode']}")
+            
+            if episodes:
+                builder.button(text="📂 Whole Season", callback_data="ep:bulk")
+            
+            builder.adjust(4)
+            prompt = f"Which episode of **{info['title']}** are we watching?"
+        else:
+            # Season selection
+            for i in range(1, 10): # Most shows have < 10 seasons
+                builder.button(text=f"Season {i}", callback_data=f"se:{i}")
+            builder.adjust(3)
+            prompt = "Which season are we aiming for?"
+
+        caption = (
+            f"📺 **{info['title']}** ({info['year']})\n"
+            f"Genre: {info.get('genre', 'Unknown')}\n\n"
+            f"{info.get('description', '')[:200]}...\n\n"
+            f"👇 {prompt}"
         )
+        
+        set_pending_request(user_id, intent)
+        
+        if info.get("poster_url"):
+            await message.answer_photo(
+                URLInputFile(info["poster_url"]),
+                caption=caption,
+                reply_markup=builder.as_markup(),
+                parse_mode="Markdown"
+            )
+        else:
+            await message.answer(
+                caption,
+                reply_markup=builder.as_markup(),
+                parse_mode="Markdown"
+            )
         return
 
     if await _present_quality_options(message, intent, user_id):
@@ -256,7 +279,6 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
 
         # Attempt direct file delivery
         try:
-            from aiogram.types import URLInputFile
             file_name = f"{result['title']} S{result['season']}E{result['episode']} {result['quality']} - SKDL(samkiel.online).mp4"
             await message.answer_document(
                 URLInputFile(result["cdn_url"], filename=file_name),
@@ -271,7 +293,6 @@ async def _handle_download_series(message: Message, intent: dict, user_id: int, 
     except Exception as exc:
         logger.error("Series download failed: %s", exc)
         elapsed_ms = int((time.monotonic() - start_time) * 1000)
-        
         is_not_found = "No series results found" in str(exc) or "No results found" in str(exc) or "Could not resolve" in str(exc)
         
         log_event(
@@ -297,7 +318,6 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
     season = intent.get("season")
     quality = intent.get("quality") or "1080p"
 
-    # 1. Update user - it's a long task
     status_msg = await message.answer(
         f"🌪️ Gathering all of **{title}** Season {season} at {quality} quality...\n"
         f"This might take about 15-20 seconds. 🍿",
@@ -312,7 +332,6 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
             await status_msg.edit_text(f"❌ Couldn't find any episodes for Season {season} of **{title}**.")
             return
 
-        # 2. Save each episode to the media table & collect IDs
         media_ids = []
         for ep in episodes:
             link_id = generate_id()
@@ -329,7 +348,6 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
             )
             media_ids.append(link_id)
 
-        # 3. Create a collection
         collection_id = generate_id()
         await save_collection(
             collection_id=collection_id,
@@ -383,10 +401,7 @@ async def _handle_bulk_series(message: Message, intent: dict, user_id: int, star
             f"❌ Something went wrong while fetching the whole season. Try requesting a single episode or check back later.",
             parse_mode="Markdown",
         )
-        # Clear the bulk intent so it doesn't loop
         clear_pending_request(user_id)
-        from services.session import add_message # locally if needed
-        add_message(user_id, "assistant", "That bulk request failed, resetting your session.")
 
 
 @router.message(F.text | F.photo)
@@ -403,41 +418,29 @@ async def handle_message(message: Message) -> None:
     image_base64 = None
     
     if message.photo:
-        # Get the highest resolution photo
         highest_res_photo: PhotoSize = message.photo[-1]
-        
         try:
-            # Tell user we are looking at the image
             status_msg = await message.answer("👁️ Looking at your image...")
-            
-            # Download file from Telegram servers
             file_info = await message.bot.get_file(highest_res_photo.file_id)
             downloaded_file = await message.bot.download_file(file_info.file_path)
-            
-            # Encode downloaded bytes to base64
             image_base64 = base64.b64encode(downloaded_file.getvalue()).decode('utf-8')
-            
             await status_msg.delete()
         except Exception as e:
             logger.error("Failed to process image: %s", e)
-            await message.answer("⚠️ I couldn't standardise your image, sorry! Can you just type the name?")
+            await message.answer("⚠️ I couldn't understand that image, sorry!")
             return
 
-    # Store user message in session
     add_message(user_id, "user", "[Sent an Image]" if message.photo else user_text)
 
-    # Get intent from Groq
     history = get_history(user_id)
     intent = await parse_intent(history, user_text, image_base64=image_base64)
 
-    # 1. Check rate limits BEFORE delivering chat_reply or starting search
     if intent["intent"] in ["download_movie", "download_series"]:
         username = (message.from_user.username or "").lower()
         if username not in ["samkiell", "samkiel488"] and not await check_rate_limit(user_id):
-            await message.answer("⚠️ whoa there big watcher, you've hit your daily limit of 10 requests. touch some grass and try again tomorrow!")
+            await message.answer("⚠️ whoa there big watcher, you've hit your daily limit of 10 requests.")
             return
 
-    # 2. Always deliver the AI's personality response if they gave one
     chat_reply = intent.get("chat_response")
     if chat_reply:
         await message.answer(chat_reply)
@@ -446,89 +449,65 @@ async def handle_message(message: Message) -> None:
     match intent["intent"]:
         case "download_movie":
             await _handle_download_movie(message, intent, user_id, start_time)
-
         case "download_series":
             await _handle_download_series(message, intent, user_id, start_time)
-
         case "clarify":
             clarify_msg = intent.get("clarify_message") or "Could you give me more details?"
-            add_message(user_id, "assistant", clarify_msg) # Log wait message too
             await message.answer(f"🤔 {clarify_msg}")
-            
-            elapsed_ms = int((time.monotonic() - start_time) * 1000)
-            log_event(
-                user_id=user_id,
-                username=message.from_user.username,
-                display_name=message.from_user.full_name,
-                action="clarification",
-                query=user_text,
-                result_found=False,
-                duration_ms=elapsed_ms,
-            )
-
         case "help":
             await message.answer(HELP_TEXT, parse_mode="Markdown")
-
-        case _ if intent.get("is_subtitle_request"):
-            from handlers.subtitle import cmd_sub_search
-            await cmd_sub_search(message, intent.get("title") or intent.get("reference_title"))
-
         case "chat":
-            # If no chat_reply was produced somehow but intent was chat, send fallback
             if not chat_reply:
-                await message.answer("I'm here to help you download movies and series! Just tell me what you want to watch.")
+                await message.answer("I'm here to help you watch stuff! What's on your mind?")
 
-        case _:
-            # Log any weird missed states
-            if not chat_reply:
-                await message.answer("Wait, what are you looking for exactly?")
+
+@router.callback_query(F.data.startswith("se:"))
+async def on_season_selected(query: CallbackQuery) -> None:
+    user_id = query.from_user.id
+    val = int(query.data.split(":")[1])
+    intent = get_pending_request(user_id)
+    if not intent:
+        await query.answer("Session expired.", show_alert=True)
+        return
+    await query.answer()
+    await query.message.delete()
+    intent["season"] = val
+    clear_pending_request(user_id)
+    await _handle_download_series(query.message, intent, user_id, time.monotonic())
+
 
 @router.callback_query(F.data.startswith("q:"))
 async def on_quality_selected(query: CallbackQuery) -> None:
     user_id = query.from_user.id
     quality_label = query.data.split(":", 1)[1]
-    
     intent = get_pending_request(user_id)
     if not intent:
-        await query.answer("Session expired. Please request again.", show_alert=True)
+        await query.answer("Session expired.", show_alert=True)
         return
-        
     await query.answer()
-    
-    # Clean up the inline keyboard message
     await query.message.delete()
-    
     intent["quality"] = quality_label
     intent["_quality_selected"] = True
     clear_pending_request(user_id)
-    
     if intent["intent"] == "download_movie":
         await _handle_download_movie(query.message, intent, user_id, time.monotonic())
     else:
         await _handle_download_series(query.message, intent, user_id, time.monotonic())
 
+
 @router.callback_query(F.data.startswith("ep:"))
 async def on_episode_selected(query: CallbackQuery) -> None:
     user_id = query.from_user.id
     val = query.data.split(":")[1]
-    
     intent = get_pending_request(user_id)
     if not intent:
-        await query.answer("Session expired. Please request again.", show_alert=True)
+        await query.answer("Session expired.", show_alert=True)
         return
-        
     await query.answer()
     await query.message.delete()
-    
     if val == "bulk":
         intent["bulk"] = True
-        intent["intent"] = "download_series"
-        intent["episode"] = None # Clear any partial episode data
     else:
         intent["episode"] = int(val)
-        intent["bulk"] = False
-        intent["intent"] = "download_series"
-
     clear_pending_request(user_id)
     await _handle_download_series(query.message, intent, user_id, time.monotonic())
-
