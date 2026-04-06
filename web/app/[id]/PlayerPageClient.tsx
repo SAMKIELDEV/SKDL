@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import PlayerClient from './PlayerClient'
 import AdBanner from '../components/AdBanner'
+import { Share2, Check } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
 
 interface MediaRow {
   id: string
@@ -81,23 +83,52 @@ export default function PlayerPageClient({ row, proxyUrl }: { row: MediaRow; pro
     return bits.join(' • ')
   }, [row.type, row.season, row.episode, row.quality, row.size])
 
+  const handleShare = async () => {
+    const shareData = {
+      title: `${row.title} — SKDL`,
+      text: `Watch ${row.title} on SKDL`,
+      url: window.location.href,
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+        toast.success('Link copied to clipboard')
+      }
+    } catch (err) {
+      console.error('Error sharing:', err)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center pt-4 md:pt-16 pb-12 md:pb-24 px-4 md:px-6 font-sans">
+      <Toaster position="top-center" theme="dark" />
       <div className="w-full max-w-5xl space-y-4 md:space-y-12">
         
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
           <div className="space-y-3 md:space-y-6 flex-1 text-left flex flex-col justify-center h-full py-1 md:py-2">
-            <div className="space-y-2">
-              <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.4em] font-bold">
-                {tagline}
-              </p>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-tight">
-                {row.title}
-              </h1>
-              <p className="text-xs md:text-sm font-mono text-zinc-500 uppercase tracking-[0.2em] font-medium pt-2">
-                  {metaLine}
-              </p>
-            </div>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div className="space-y-2">
+                  <p className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.4em] font-bold">
+                    {tagline}
+                  </p>
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter text-white leading-tight">
+                    {row.title}
+                  </h1>
+                  <p className="text-xs md:text-sm font-mono text-zinc-500 uppercase tracking-[0.2em] font-medium pt-2">
+                    {metaLine}
+                  </p>
+                </div>
+                <button
+                  onClick={handleShare}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all font-mono text-[10px] uppercase tracking-widest font-bold group"
+                >
+                  <Share2 className="w-4 h-4 text-zinc-400 group-hover:text-white transition-colors" />
+                  <span>Share Link</span>
+                </button>
+              </div>
           </div>
         </div>
 
