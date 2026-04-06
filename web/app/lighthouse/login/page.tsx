@@ -2,23 +2,25 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Lock, Delete } from 'lucide-react'
+import { Lock, Delete, Check } from 'lucide-react'
 import { login } from './actions'
 
 export default function LoginPage() {
   const [pin, setPin] = useState('')
   const [error, setError] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleInput = (digit: string) => {
-    if (pin.length < 4) {
+    if (pin.length < 4 && !success) {
       setPin(prev => prev + digit)
       setError(false)
     }
   }
 
   const handleDelete = () => {
+    if (success) return
     setPin(prev => prev.slice(0, -1))
     setError(false)
   }
@@ -29,8 +31,12 @@ export default function LoginPage() {
     setLoading(true)
     const result = await login(currentPin)
     if (result.success) {
-      router.push('/lighthouse')
-      router.refresh()
+      setSuccess(true)
+      // Small delay to show the success state before redirecting
+      setTimeout(() => {
+        router.push('/lighthouse')
+        router.refresh()
+      }, 800)
     } else {
       setError(true)
       setPin('')
@@ -56,14 +62,20 @@ export default function LoginPage() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [pin])
+  }, [pin, success])
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
       <div className={`max-w-xs w-full space-y-12 text-center transition-all duration-300 ${error ? 'animate-shake' : ''}`}>
         <div className="space-y-4">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-zinc-900 border border-white/5 shadow-2xl mb-2">
-            <Lock className="w-10 h-10 text-white" />
+          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-3xl transition-all duration-500 border shadow-2xl mb-2 ${
+            success ? 'bg-emerald-500 border-emerald-400 scale-110' : 'bg-zinc-900 border-white/5'
+          }`}>
+            {success ? (
+              <Check className="w-10 h-10 text-white animate-in zoom-in duration-300" />
+            ) : (
+              <Lock className="w-10 h-10 text-white" />
+            )}
           </div>
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tighter uppercase font-space">Lighthouse</h1>
@@ -76,9 +88,11 @@ export default function LoginPage() {
             <div
               key={i}
               className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
-                pin.length > i 
-                  ? 'bg-white border-white scale-125 shadow-[0_0_15px_rgba(255,255,255,0.5)]' 
-                  : 'bg-transparent border-zinc-800'
+                success
+                  ? 'bg-emerald-500 border-emerald-500 scale-150 shadow-[0_0_20px_rgba(16,185,129,0.8)]'
+                  : pin.length > i 
+                    ? 'bg-white border-white scale-125 shadow-[0_0_15px_rgba(255,255,255,0.5)]' 
+                    : 'bg-transparent border-zinc-800'
               } ${error ? 'bg-red-500 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]' : ''}`}
             />
           ))}
@@ -89,7 +103,7 @@ export default function LoginPage() {
             <button
               key={num}
               onClick={() => handleInput(num.toString())}
-              disabled={loading}
+              disabled={loading || success}
               className="h-16 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-white/5 text-2xl font-mono transition-all active:scale-90 disabled:opacity-50 backdrop-blur-sm"
             >
               {num}
@@ -98,14 +112,14 @@ export default function LoginPage() {
           <div className="h-16" />
           <button
             onClick={() => handleInput('0')}
-            disabled={loading}
+            disabled={loading || success}
             className="h-16 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-white/5 text-2xl font-mono transition-all active:scale-90 disabled:opacity-50 backdrop-blur-sm"
           >
             0
           </button>
           <button
             onClick={handleDelete}
-            disabled={loading}
+            disabled={loading || success}
             className="h-16 rounded-2xl bg-zinc-900/40 hover:bg-zinc-800/60 border border-white/5 flex items-center justify-center transition-all active:scale-90 disabled:opacity-50 backdrop-blur-sm"
           >
             <Delete className="w-7 h-7 text-zinc-500" />
