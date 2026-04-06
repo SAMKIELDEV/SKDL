@@ -1,5 +1,5 @@
 """
-/start and /status command handlers.
+/start, /status, /feedback, /privacy, and /terms command handlers.
 """
 
 from aiogram import Router
@@ -23,13 +23,36 @@ I'm your assistant for high-speed movie and series downloads. Just tell me what 
 🎬 `/movie [title]` — Direct movie fetch
 📺 `/series [title] [season] [episode]` — Direct episode fetch
 📊 `/status` — Check bot health
+💬 `/feedback` — Share your thoughts
 
-Or just send me a message — I'm built by **SAMKIEL** and I'm ready to find your next watch! 🎬"""
+**Legal:**
+⚖️ `/privacy` — Privacy Policy
+📜 `/terms` — Terms of Use
+
+Built by **SAMKIEL**. Ready to find your next watch! 🎬"""
 
 STATUS_MESSAGE = """✅ **Bot Status: Online**
 
 🤖 SKDL Bot is running and ready.
 📡 All services operational."""
+
+FEEDBACK_MESSAGE = """💬 **WE VALUE YOUR INPUT**
+
+Help us improve SKDL by sharing your thoughts, bug reports, or suggestions.
+
+🔗 Submit feedback: https://samkiel.online/feedback
+
+Your input directly shapes the future of this bot. Thanks for being part of the journey!"""
+
+PRIVACY_MESSAGE = """⚖️ **PRIVACY POLICY**
+
+Your privacy is important to us. Read our full policy here:
+🔗 https://samkiel.online/privacy"""
+
+TERMS_MESSAGE = """📜 **TERMS OF USE**
+
+By using SKDL, you agree to our terms. Read them here:
+🔗 https://samkiel.online/terms"""
 
 
 @router.message(Command("start"))
@@ -49,3 +72,30 @@ async def cmd_status(message: Message) -> None:
         await message.answer(STATUS_MESSAGE, parse_mode="Markdown")
     except Exception:
         await message.answer("✅ Bot is online and operational.")
+
+
+@router.message(Command("feedback"))
+async def cmd_feedback(message: Message) -> None:
+    """Handle /feedback command."""
+    try:
+        await message.answer(FEEDBACK_MESSAGE, parse_mode="Markdown")
+    except Exception:
+        await message.answer("💬 Share your feedback: https://samkiel.online/feedback")
+
+
+@router.message(Command("privacy"))
+async def cmd_privacy(message: Message) -> None:
+    """Handle /privacy command."""
+    try:
+        await message.answer(PRIVACY_MESSAGE, parse_mode="Markdown")
+    except Exception:
+        await message.answer("⚖️ Privacy Policy: https://samkiel.online/privacy")
+
+
+@router.message(Command("terms"))
+async def cmd_terms(message: Message) -> None:
+    """Handle /terms command."""
+    try:
+        await message.answer(TERMS_MESSAGE, parse_mode="Markdown")
+    except Exception:
+        await message.answer("📜 Terms of Use: https://samkiel.online/terms")
